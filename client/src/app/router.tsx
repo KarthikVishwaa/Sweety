@@ -21,6 +21,10 @@ export const router = createBrowserRouter([
     element: <ProtectedRoute />,
     children: [
       {
+        path: '/history',
+        lazy: async () => ({ Component: (await import('@/pages/HistoryPage')).HistoryPage }),
+      },
+      {
         path: '/',
         lazy: async () => ({ Component: (await import('@/pages/DashboardPage')).DashboardPage }),
       },
