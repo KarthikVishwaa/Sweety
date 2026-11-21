@@ -50,7 +50,9 @@ export function AboutYouStep({ form, onBack, onSubmit, pending, serverError }: A
         <Button type="button" variant="outline" size="lg" onClick={onBack} disabled={pending}>
           Back
         </Button>
-        <SubmitButton pending={pending}>Create my account</SubmitButton>
+        <div className="min-w-0 flex-1">
+          <SubmitButton pending={pending}>Create my account</SubmitButton>
+        </div>
       </div>
     </form>
   );
