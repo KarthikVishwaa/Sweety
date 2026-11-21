@@ -1,4 +1,26 @@
 import { z } from 'zod';
+import { isRealCalendarDate, todayInTimeZone, yearsAgo } from '../../utils/date.js';
+
+const MAX_AGE_YEARS = 120;
+
+const DATE_OF_BIRTH_MESSAGES = {
+  required: 'Please enter your date of birth.',
+  invalid: 'Please enter a valid date of birth.',
+  future: 'Date of birth cannot be in the future.',
+} as const;
+
+const dateOfBirth = z
+  .string({ error: DATE_OF_BIRTH_MESSAGES.required })
+  .trim()
+  .min(1, DATE_OF_BIRTH_MESSAGES.required)
+  .superRefine((value, ctx) => {
+    const today = todayInTimeZone();
+    if (!isRealCalendarDate(value) || value < yearsAgo(today, MAX_AGE_YEARS)) {
+      ctx.addIssue({ code: 'custom', message: DATE_OF_BIRTH_MESSAGES.invalid });
+    } else if (value > today) {
+      ctx.addIssue({ code: 'custom', message: DATE_OF_BIRTH_MESSAGES.future });
+    }
+  });
 
 const email = z
   .string({ error: 'Email is required' })
@@ -19,6 +41,7 @@ export const registerSchema = z.object({
     .max(72, 'Password must be at most 72 characters')
     .regex(/[A-Za-z]/, 'Password must contain at least one letter')
     .regex(/\d/, 'Password must contain at least one number'),
+  dateOfBirth,
 });
 
 export const loginSchema = z.object({

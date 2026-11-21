@@ -5,6 +5,7 @@ export interface User {
   name: string;
   email: string;
   role: UserRole;
+  dateOfBirth: string | null;
 }
 
 export interface UserRecord extends User {
@@ -15,6 +16,7 @@ export interface NewUser {
   name: string;
   email: string;
   passwordHash: string;
+  dateOfBirth: string;
 }
 
 export interface AuthSession {

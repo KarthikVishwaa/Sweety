@@ -28,3 +28,14 @@ export function addDays(date: string, days: number): string {
   const [year = 0, month = 1, day = 1] = date.split('-').map(Number);
   return new Date(Date.UTC(year, month - 1, day + days)).toISOString().slice(0, 10);
 }
+
+export function yearsAgo(date: string, years: number): string {
+  const [year = 0, month = 1, day = 1] = date.split('-').map(Number);
+  const targetYear = year - years;
+  const lastDayOfMonth = new Date(Date.UTC(targetYear, month, 0)).getUTCDate();
+  return [
+    String(targetYear).padStart(4, '0'),
+    String(month).padStart(2, '0'),
+    String(Math.min(day, lastDayOfMonth)).padStart(2, '0'),
+  ].join('-');
+}
