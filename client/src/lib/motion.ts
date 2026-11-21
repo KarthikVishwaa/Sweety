@@ -17,6 +17,12 @@ export const staggerChildren: Variants = {
   visible: { transition: { staggerChildren: 0.06 } },
 };
 
-export function prefersReducedMotion(): boolean {
-  return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-}
+export const errorReveal: Variants = {
+  hidden: { opacity: 0, height: 0, y: -4 },
+  visible: { opacity: 1, height: 'auto', y: 0, transition: { duration: 0.2 } },
+};
+
+export const shake: Variants = {
+  idle: { x: 0 },
+  shake: { x: [0, -10, 10, -8, 8, -4, 4, 0], transition: { duration: 0.4 } },
+};
