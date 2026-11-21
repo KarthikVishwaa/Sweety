@@ -1,5 +1,5 @@
-import { motion, useReducedMotion } from 'motion/react';
-import { fadeIn, fadeUp, staggerChildren } from '@/lib/motion';
+import { motion } from 'motion/react';
+import { fadeUp, staggerChildren } from '@/lib/motion';
 import { SLOTS } from '../readings.constants';
 import type { Reading, ReadingSlot } from '../types';
 import { ReadingsProgress } from './ReadingsProgress';
@@ -13,8 +13,6 @@ interface SlotChecklistProps {
 }
 
 export function SlotChecklist({ readings, onAdd, onEdit, onDelete }: SlotChecklistProps) {
-  const reducedMotion = useReducedMotion();
-
   return (
     <section className="space-y-4" aria-label="Readings for the selected date">
       <ReadingsProgress count={readings.length} />
@@ -25,7 +23,7 @@ export function SlotChecklist({ readings, onAdd, onEdit, onDelete }: SlotCheckli
         animate="visible"
       >
         {SLOTS.map(({ key, label }) => (
-          <motion.li key={key} variants={reducedMotion ? fadeIn : fadeUp}>
+          <motion.li key={key} variants={fadeUp}>
             <SlotCard
               slot={key}
               label={label}

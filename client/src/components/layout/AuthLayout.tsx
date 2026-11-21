@@ -1,8 +1,8 @@
-import { motion, useReducedMotion } from 'motion/react';
+import { motion } from 'motion/react';
 import type { ReactNode } from 'react';
 import { BrandMark } from '@/components/layout/BrandMark';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { fadeIn, fadeUp } from '@/lib/motion';
+import { fadeUp } from '@/lib/motion';
 
 interface AuthLayoutProps {
   title: string;
@@ -12,8 +12,6 @@ interface AuthLayoutProps {
 }
 
 export function AuthLayout({ title, description, footer, children }: AuthLayoutProps) {
-  const reducedMotion = useReducedMotion();
-
   return (
     <div className="grid min-h-svh lg:grid-cols-2">
       <aside className="hidden flex-col justify-between bg-gradient-to-br from-teal-600 to-teal-800 p-12 text-white lg:flex">
@@ -25,7 +23,7 @@ export function AuthLayout({ title, description, footer, children }: AuthLayoutP
       <main className="flex items-center justify-center bg-muted/30 p-6">
         <motion.div
           className="w-full max-w-sm space-y-6"
-          variants={reducedMotion ? fadeIn : fadeUp}
+          variants={fadeUp}
           initial="hidden"
           animate="visible"
         >
