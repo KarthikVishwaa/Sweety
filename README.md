@@ -80,11 +80,58 @@ case-insensitively. Login returns the same `401` message for an unknown email an
 comparison so timing does not reveal which accounts exist. Login and register share the stricter rate limiter (20 requests
 per 15 minutes per IP), which is switched off when `NODE_ENV=test`.
 
+## Readings API
+
+All readings routes require a logged-in user and every query is scoped to that user. A reading that does not exist, or
+belongs to someone else, returns `404 "Reading not found."` so its existence is never revealed. Each reading is returned as
+`{ id, date, slot, slotLabel, value, createdAt, updatedAt }`, where `date` is a plain `YYYY-MM-DD` string.
+
+| Method | Path                | Body                     | Success            | Notes                               |
+| ------ | ------------------- | ------------------------ | ------------------ | ----------------------------------- |
+| GET    | `/api/readings`     | query `?date=YYYY-MM-DD` | `200 { readings }` | Ordered by slot, empty list if none |
+| POST   | `/api/readings`     | `{ date, slot, value }`  | `201 { reading }`  |                                     |
+| PUT    | `/api/readings/:id` | `{ date, slot, value }`  | `200 { reading }`  | Full replace, same rules as create  |
+| DELETE | `/api/readings/:id` | none                     | `204`              |                                     |
+
+Slots, in display order: `morning_fasting` (Morning (fasting)), `after_breakfast` (After breakfast), `after_lunch`
+(After lunch), `after_dinner` (After dinner).
+
+### Validation order
+
+Rules run in this order and only the first failure is returned. The error is
+`{ error: { message, code, details } }` and `details` is keyed by field (`value`, `date` or `slot`) so the UI can attach the message to the right input.
+
+| #   | Rule                                              | Status | Message                                                |
+| --- | ------------------------------------------------- | ------ | ------------------------------------------------------ |
+| 1   | Value missing or empty                            | 400    | Please enter a glucose value.                          |
+| 2   | Value not a whole number from 40 to 600           | 400    | Value must be between 40 and 600 mg/dl.                |
+| 3   | Date missing or not a real `YYYY-MM-DD` date      | 400    | Please choose a valid date.                            |
+| 4   | Slot not one of the four keys                     | 400    | Please choose a time slot.                             |
+| 5   | Date in the future                                | 400    | Date cannot be in the future.                          |
+| 6   | The user already has 4 readings on that date      | 409    | You can add only 4 readings per day.                   |
+| 7   | The user already has a reading for that slot/date | 409    | You already have an After lunch reading for this date. |
+
+Rules 6 and 7 exclude the reading being edited, so changing only the value never conflicts, while moving a reading to a taken
+slot or a full date does. The database unique constraint on `(user_id, reading_date, slot)` is the final safety net: a race
+that slips past rule 7 is mapped to the same 409 message.
+
+### "Today" is computed in Asia/Kolkata
+
+"Future" is judged against the current date in the timezone from the `TZ` setting (`Asia/Kolkata` by default), not UTC or
+the server's local zone. A reading logged at 00:30 IST today is accepted even though it is still yesterday in UTC. The client
+makes the same assumption when it disables future dates in the calendar.
+
+### Glucose bands are display hints only
+
+The dashboard labels a value below 70 mg/dl as **Low**, 70 to 180 as **In range** and above 180 as **High**. The thresholds
+live in one constant (`GLUCOSE_THRESHOLDS` in `client/src/features/readings/readings.constants.ts`). They are visual hints,
+not medical advice, and they are not used for any server-side validation. Talk to your doctor about your own targets.
+
 ## Server tests and the test database
 
 Server tests run against a real PostgreSQL database named `sweety_test`, separate from the development `sweety` database.
 On every `npm test -w server`, `src/tests/globalSetup.ts` creates `sweety_test` if it does not exist (on the same server as
-`DATABASE_URL`) and applies all migrations to it. Each auth test starts with `TRUNCATE users`. Postgres must be running
+`DATABASE_URL`) and applies all migrations to it. Each test starts with `TRUNCATE users CASCADE` (which also clears readings). Postgres must be running
 (`npm run db:up`). The development database is never touched.
 
 ## Environment variables
