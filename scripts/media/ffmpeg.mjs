@@ -72,3 +72,26 @@ export async function ssim(first, second) {
   if (!match) throw new Error('Could not read the SSIM result from ffmpeg.');
   return Number(match[1]);
 }
+
+export async function grayPixels(file) {
+  const { stdout } = await execFileAsync(
+    'ffmpeg',
+    ['-v', 'error', '-i', file, '-frames:v', '1', '-pix_fmt', 'gray', '-f', 'rawvideo', '-'],
+    { encoding: 'buffer', maxBuffer: MAX_BUFFER },
+  );
+  return stdout;
+}
+
+export async function probeImage(file) {
+  const { stdout } = await execFileAsync('ffprobe', [
+    '-v',
+    'error',
+    '-show_entries',
+    'stream=width,height',
+    '-of',
+    'json',
+    file,
+  ]);
+  const { width, height } = JSON.parse(stdout).streams[0];
+  return { width, height };
+}
