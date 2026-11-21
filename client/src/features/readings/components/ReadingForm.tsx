@@ -43,7 +43,7 @@ function toDefaultValues(editor: ReadingEditor, defaultDate: string): ReadingFor
     const { date, slot, value } = editor.reading;
     return { date, slot, value: String(value) };
   }
-  return { date: defaultDate, slot: editor.slot, value: '' };
+  return { date: defaultDate, slot: editor.slot ?? '', value: '' };
 }
 
 export function ReadingForm({ editor, defaultDate, onDone, onCancel }: ReadingFormProps) {

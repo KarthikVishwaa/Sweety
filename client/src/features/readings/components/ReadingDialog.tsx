@@ -30,7 +30,7 @@ export function ReadingDialog({ editor, defaultDate, onClose }: ReadingDialogPro
         </DialogHeader>
         {editor && (
           <ReadingForm
-            key={editor.mode === 'edit' ? editor.reading.id : editor.slot}
+            key={editor.mode === 'edit' ? editor.reading.id : (editor.slot ?? 'new')}
             editor={editor}
             defaultDate={defaultDate}
             onDone={onClose}
