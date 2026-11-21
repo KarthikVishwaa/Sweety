@@ -17,6 +17,7 @@ import { reportsRouter } from './modules/reports/reports.routes.js';
 export const app = express();
 
 app.disable('x-powered-by');
+app.set('trust proxy', env.TRUST_PROXY);
 
 app.use(pinoHttp({ logger }));
 app.use(helmet());

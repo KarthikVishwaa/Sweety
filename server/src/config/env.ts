@@ -14,6 +14,8 @@ const envSchema = z.object({
   JWT_EXPIRES_IN: z.string().min(1),
   TZ: z.string().min(1).default('Asia/Kolkata'),
   COOKIE_SECURE: z.stringbool().optional(),
+  TRUST_PROXY: z.coerce.number().int().min(0).default(0),
+  ALLOW_DEMO_SEED: z.stringbool().default(false),
 });
 
 export const ENV_KEYS = Object.keys(envSchema.shape);

@@ -20,8 +20,10 @@ export interface SeedSummary {
 }
 
 export async function seedDemoData(now: Date = new Date()): Promise<SeedSummary> {
-  if (env.NODE_ENV === 'production') {
-    throw new Error('Refusing to seed demo data while NODE_ENV=production.');
+  if (env.NODE_ENV === 'production' && !env.ALLOW_DEMO_SEED) {
+    throw new Error(
+      'Refusing to seed demo data while NODE_ENV=production. Set ALLOW_DEMO_SEED=true only for a throwaway demo stack.',
+    );
   }
 
   const to = todayInTimeZone(now);

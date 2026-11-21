@@ -127,4 +127,15 @@ describe('seedDemoData', () => {
     const users = await pool.query('SELECT 1 FROM users');
     expect(users.rowCount).toBe(0);
   });
+
+  it('runs in production only when ALLOW_DEMO_SEED=true is set explicitly', async () => {
+    vi.stubEnv('NODE_ENV', 'production');
+    vi.stubEnv('ALLOW_DEMO_SEED', 'true');
+    vi.resetModules();
+    const { seedDemoData: productionSeed } = await import('../seed/demoSeed.js');
+
+    const summary = await productionSeed(NOW);
+
+    expect(summary.readingCount).toBeGreaterThan(0);
+  });
 });
