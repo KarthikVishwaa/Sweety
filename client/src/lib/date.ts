@@ -51,3 +51,10 @@ export function formatRange(from: string, to: string): string {
   const end = format(parseISODate(to), 'd MMM yyyy');
   return from === to ? end : `${formatShortDate(from)} – ${end}`;
 }
+
+export function yearsAgo(value: string, years: number): string {
+  const [year = 0, month = 1, day = 1] = value.split('-').map(Number);
+  const targetYear = year - years;
+  const lastDay = new Date(targetYear, month, 0).getDate();
+  return `${String(targetYear).padStart(4, '0')}-${String(month).padStart(2, '0')}-${String(Math.min(day, lastDay)).padStart(2, '0')}`;
+}
