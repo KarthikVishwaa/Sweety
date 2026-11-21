@@ -45,32 +45,19 @@ export async function probeVideo(file) {
   };
 }
 
-export async function extractFrame(video, frameIndex, outputPng) {
-  await ffmpeg(['-i', video, '-vf', `select=eq(n\\,${frameIndex})`, '-frames:v', '1', outputPng]);
-}
-
-export async function ssim(first, second) {
-  const { stderr } = await execFileAsync(
+// Decodes every frame as 8-bit grayscale at the size the filter produces, one Buffer per frame.
+export async function decodeGrayFrames(file, filter, { width, height }) {
+  const { stdout } = await execFileAsync(
     'ffmpeg',
-    [
-      '-hide_banner',
-      '-loglevel',
-      'info',
-      '-i',
-      first,
-      '-i',
-      second,
-      '-lavfi',
-      'ssim',
-      '-f',
-      'null',
-      '-',
-    ],
-    { maxBuffer: MAX_BUFFER },
+    ['-v', 'error', '-i', file, '-an', '-vf', `${filter},format=gray`, '-f', 'rawvideo', '-'],
+    { encoding: 'buffer', maxBuffer: MAX_BUFFER },
   );
-  const match = /All:([0-9.]+)/.exec(stderr);
-  if (!match) throw new Error('Could not read the SSIM result from ffmpeg.');
-  return Number(match[1]);
+  const frameSize = width * height;
+  const frames = [];
+  for (let offset = 0; offset + frameSize <= stdout.length; offset += frameSize) {
+    frames.push(stdout.subarray(offset, offset + frameSize));
+  }
+  return frames;
 }
 
 export async function grayPixels(file) {

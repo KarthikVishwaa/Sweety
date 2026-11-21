@@ -1,39 +1,43 @@
 {
   "clips": {
     "floating": {
-      "loop": "crossfade",
-      "frames": 62,
+      "seam": "trim",
+      "loop": true,
+      "frames": 53,
       "bytes": {
-        "mp4": 138858,
-        "webm": 111861,
-        "poster": 13478
+        "mp4": 103202,
+        "webm": 70730,
+        "poster": 14096
       }
     },
     "waving": {
-      "loop": "crossfade",
-      "frames": 62,
+      "seam": "interpolate",
+      "loop": true,
+      "frames": 55,
       "bytes": {
-        "mp4": 127895,
-        "webm": 101747,
-        "poster": 15726
+        "mp4": 99464,
+        "webm": 64623,
+        "poster": 17048
       }
     },
     "bouncing": {
-      "loop": "native",
-      "frames": 72,
+      "seam": "trim",
+      "loop": true,
+      "frames": 58,
       "bytes": {
-        "mp4": 226122,
-        "webm": 137018,
-        "poster": 15658
+        "mp4": 202504,
+        "webm": 122008,
+        "poster": 15624
       }
     },
     "love": {
-      "loop": "crossfade",
-      "frames": 62,
+      "seam": "once",
+      "loop": false,
+      "frames": 72,
       "bytes": {
-        "mp4": 151985,
-        "webm": 120870,
-        "poster": 16654
+        "mp4": 147932,
+        "webm": 99360,
+        "poster": 17322
       }
     }
   },

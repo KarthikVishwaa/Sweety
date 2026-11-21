@@ -20,7 +20,13 @@ try {
 
   if (!target || target === 'mascots') {
     console.log('Optimising mascot videos...');
-    console.table(await optimizeMascots({ sourceDir, outputDir: `${assetsDir}/mascot` }));
+    console.table(
+      await optimizeMascots({
+        sourceDir,
+        outputDir: `${assetsDir}/mascot`,
+        checkDir: `${sourceDir}/loop-checks`,
+      }),
+    );
   }
   if (!target || target === 'logo') {
     console.log('Optimising the logo and favicons...');
