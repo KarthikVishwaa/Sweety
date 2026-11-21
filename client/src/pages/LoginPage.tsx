@@ -42,6 +42,8 @@ export function LoginPage() {
 
   return (
     <AuthLayout
+      mascot="love"
+      tagline="We missed you!"
       title="Welcome back"
       description="Sign in to your Sweety account."
       footer={

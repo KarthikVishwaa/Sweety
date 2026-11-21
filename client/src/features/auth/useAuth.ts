@@ -27,15 +27,15 @@ export function useLogin() {
   });
 }
 
-export function useRegister() {
+export function useRegister({ onRegistered }: { onRegistered?: (user: User) => void } = {}) {
   const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: (input: SignupInput) => authApi.register(input),
     onSuccess: (user: User) => {
+      onRegistered?.(user);
       discardUserData(queryClient);
       queryClient.setQueryData(ME_KEY, user);
-      toast.success('Account created');
     },
   });
 }

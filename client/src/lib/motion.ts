@@ -32,6 +32,16 @@ export const pageTransition: Variants = {
   exit: { opacity: 0, transition: { duration: DURATION.fast } },
 };
 
+export const stepSlide: Variants = {
+  enter: (direction: number) => ({ opacity: 0, x: direction * 24 }),
+  center: { opacity: 1, x: 0, transition: { duration: DURATION.base, ease: EASE_OUT } },
+  exit: (direction: number) => ({
+    opacity: 0,
+    x: direction * -24,
+    transition: { duration: DURATION.fast },
+  }),
+};
+
 export const errorReveal: Variants = {
   hidden: { opacity: 0, height: 0, y: -4 },
   visible: { opacity: 1, height: 'auto', y: 0, transition: { duration: DURATION.base } },

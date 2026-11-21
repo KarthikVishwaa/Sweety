@@ -42,6 +42,7 @@ describe('LoginPage', () => {
       name: 'Asha Rao',
       email: 'asha@example.com',
       role: 'patient',
+      dateOfBirth: null,
     });
     renderLoginPage();
 

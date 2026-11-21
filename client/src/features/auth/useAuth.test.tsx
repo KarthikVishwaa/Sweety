@@ -7,7 +7,13 @@ import { useLogin, useLogout } from './useAuth';
 
 vi.mock('./authApi');
 
-const user = { id: '2', name: 'Ben', email: 'ben@example.com', role: 'patient' as const };
+const user = {
+  id: '2',
+  name: 'Ben',
+  email: 'ben@example.com',
+  role: 'patient' as const,
+  dateOfBirth: null,
+};
 
 function setup() {
   const queryClient = new QueryClient();

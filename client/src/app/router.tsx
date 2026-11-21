@@ -17,11 +17,13 @@ export const router = createBrowserRouter([
             path: '/login',
             lazy: async () => ({ Component: (await import('@/pages/LoginPage')).LoginPage }),
           },
-          {
-            path: '/signup',
-            lazy: async () => ({ Component: (await import('@/pages/SignupPage')).SignupPage }),
-          },
         ],
+      },
+      {
+        path: '/signup',
+        lazy: async () => ({
+          Component: (await import('@/pages/OnboardingPage')).OnboardingPage,
+        }),
       },
       {
         element: <ProtectedRoute />,
