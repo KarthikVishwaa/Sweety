@@ -3,7 +3,12 @@ import { afterAll, beforeEach, describe, expect, it } from 'vitest';
 import { app } from '../app.js';
 import { pool } from '../db/pool.js';
 
-const validUser = { name: 'Asha Rao', email: 'asha@example.com', password: 'sweet1234' };
+const validUser = {
+  name: 'Asha Rao',
+  email: 'asha@example.com',
+  password: 'sweet1234',
+  dateOfBirth: '1990-05-15',
+};
 const INVALID_CREDENTIALS = 'Invalid email or password.';
 
 const register = (body: object = validUser) => request(app).post('/api/auth/register').send(body);
@@ -31,6 +36,7 @@ describe('POST /api/auth/register', () => {
       name: 'Asha Rao',
       email: 'asha@example.com',
       role: 'patient',
+      dateOfBirth: '1990-05-15',
     });
     expect(response.body.user.id).toEqual(expect.any(String));
     expect(JSON.stringify(response.body)).not.toMatch(/password/i);
@@ -82,6 +88,7 @@ describe('POST /api/auth/register', () => {
       name: 'Name is required',
       email: 'Enter a valid email address',
       password: 'Password must be at least 8 characters',
+      dateOfBirth: 'Please enter your date of birth.',
     });
   });
 
