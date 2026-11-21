@@ -1,6 +1,11 @@
 import pg from 'pg';
 import { AppError } from '../../lib/AppError.js';
-import { MAX_READINGS_PER_DAY, READING_MESSAGES, SLOT_LABELS } from './readings.constants.js';
+import {
+  MAX_READINGS_PER_DAY,
+  READING_MESSAGES,
+  SLOT_ARTICLES,
+  SLOT_LABELS,
+} from './readings.constants.js';
 import * as readingsRepository from './readings.repository.js';
 import { readingIdSchema } from './readings.schemas.js';
 import type { Reading, ReadingInput, ReadingRecord, ReadingSlot } from './readings.types.js';
@@ -16,9 +21,7 @@ function notFound() {
 }
 
 function slotTaken(slot: ReadingSlot) {
-  const label = SLOT_LABELS[slot];
-  const article = /^[aeiou]/i.test(label) ? 'an' : 'a';
-  const message = `You already have ${article} ${label} reading for this date.`;
+  const message = `You already have ${SLOT_ARTICLES[slot]} ${SLOT_LABELS[slot]} reading for this date.`;
   return new AppError(409, message, 'SLOT_TAKEN', { slot: message });
 }
 

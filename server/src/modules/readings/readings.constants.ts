@@ -12,6 +12,13 @@ export const SLOT_LABELS = {
   after_dinner: 'After dinner',
 } as const satisfies Record<(typeof SLOT_KEYS)[number], string>;
 
+export const SLOT_ARTICLES = {
+  morning_fasting: 'a',
+  after_breakfast: 'an',
+  after_lunch: 'an',
+  after_dinner: 'an',
+} as const satisfies Record<(typeof SLOT_KEYS)[number], 'a' | 'an'>;
+
 export const MAX_READINGS_PER_DAY = SLOT_KEYS.length;
 export const MIN_GLUCOSE_VALUE = 40;
 export const MAX_GLUCOSE_VALUE = 600;

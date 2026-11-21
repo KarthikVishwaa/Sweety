@@ -157,14 +157,18 @@ describe('POST /api/readings', () => {
     expect(response.body.error.details.slot).toBe(response.body.error.message);
   });
 
-  it('uses the right article for the morning slot', async () => {
-    await create(reading());
+  it.each([
+    ['morning_fasting', 'You already have a Morning (fasting) reading for this date.'],
+    ['after_breakfast', 'You already have an After breakfast reading for this date.'],
+    ['after_lunch', 'You already have an After lunch reading for this date.'],
+    ['after_dinner', 'You already have an After dinner reading for this date.'],
+  ])('words the duplicate message naturally for %s', async (slot, message) => {
+    await create(reading({ slot }));
 
-    const response = await create(reading({ value: 120 }));
+    const response = await create(reading({ slot, value: 120 }));
 
-    expect(response.body.error.message).toBe(
-      'You already have a Morning (fasting) reading for this date.',
-    );
+    expect(response.status).toBe(409);
+    expect(response.body.error.message).toBe(message);
   });
 
   it('checks the 4-per-day limit before the duplicate-slot rule', async () => {
