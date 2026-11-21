@@ -13,3 +13,4 @@ client/src/test
 client/**/*.test.ts
 client/**/*.test.tsx
 client/vitest.config.ts
+design-source
