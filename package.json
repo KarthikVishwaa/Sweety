@@ -35,11 +35,13 @@
     "build": "npm run build --workspaces",
     "lint": "eslint . --max-warnings 0",
     "format": "prettier --write .",
+    "format:check": "prettier --check .",
     "test": "npm run test --workspaces",
+    "verify": "npm run lint && npm run format:check && npm run build && npm test",
     "db:up": "docker compose up -d --wait",
     "db:down": "docker compose down",
     "db:migrate": "npm run migrate -w server -- up",
-    "prepare": "husky",
-    "seed": "npm run seed -w server"
+    "seed": "npm run seed -w server",
+    "prepare": "husky"
   }
 }

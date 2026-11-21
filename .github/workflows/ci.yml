@@ -1,0 +1,49 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    env:
+      HUSKY: 0
+      NODE_ENV: development
+      CLIENT_URL: http://localhost:5173
+      DATABASE_URL: postgres://sweety:sweety_ci_password@localhost:5432/sweety
+      REDIS_URL: redis://localhost:6379
+      JWT_SECRET: ci-only-secret-that-is-at-least-32-characters-long
+      JWT_EXPIRES_IN: 15m
+      TZ: Asia/Kolkata
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: sweety
+          POSTGRES_PASSWORD: sweety_ci_password
+          POSTGRES_DB: sweety
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U sweety -d sweety"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: lts/*
+          cache: npm
+      - run: npm ci
+      - name: Run migrations
+        run: npm run db:migrate
+      - name: Lint
+        run: npm run lint
+      - name: Check formatting
+        run: npm run format:check
+      - name: Build
+        run: npm run build
+      - name: Test
+        run: npm test
