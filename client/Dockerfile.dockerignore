@@ -1,0 +1,15 @@
+.git
+.env
+.env.*
+**/node_modules
+**/dist
+**/coverage
+**/*.log
+.husky
+docs
+server/*
+!server/package.json
+client/src/test
+client/**/*.test.ts
+client/**/*.test.tsx
+client/vitest.config.ts
