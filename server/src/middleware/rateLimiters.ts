@@ -1,0 +1,25 @@
+import type { NextFunction, Request, Response } from 'express';
+import rateLimit from 'express-rate-limit';
+import { AppError } from '../lib/AppError.js';
+
+const FIFTEEN_MINUTES_MS = 15 * 60 * 1000;
+
+const tooManyRequests = (_req: Request, _res: Response, next: NextFunction) => {
+  next(new AppError(429, 'Too many requests, please try again later', 'RATE_LIMITED'));
+};
+
+export const globalLimiter = rateLimit({
+  windowMs: FIFTEEN_MINUTES_MS,
+  limit: 300,
+  standardHeaders: 'draft-8',
+  legacyHeaders: false,
+  handler: tooManyRequests,
+});
+
+export const authLimiter = rateLimit({
+  windowMs: FIFTEEN_MINUTES_MS,
+  limit: 20,
+  standardHeaders: 'draft-8',
+  legacyHeaders: false,
+  handler: tooManyRequests,
+});
