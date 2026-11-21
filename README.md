@@ -127,6 +127,53 @@ The dashboard labels a value below 70 mg/dl as **Low**, 70 to 180 as **In range*
 live in one constant (`GLUCOSE_THRESHOLDS` in `client/src/features/readings/readings.constants.ts`). They are visual hints,
 not medical advice, and they are not used for any server-side validation. Talk to your doctor about your own targets.
 
+## Reports API
+
+`GET /api/reports?type=daily|mtd|monthly&date=YYYY-MM-DD` (login required, scoped to the current user).
+
+| `type`    | Range covered                                                                     |
+| --------- | --------------------------------------------------------------------------------- |
+| `daily`   | `from = to = date`                                                                |
+| `mtd`     | The 1st of the month containing `date`, up to and including `date`                |
+| `monthly` | The **whole calendar month before** the month containing `date` (1st to last day) |
+
+Examples: `date=2026-10-15` gives daily `2026-10-15`, mtd `2026-10-01` to `2026-10-15`, monthly `2026-09-01` to
+`2026-09-30`. A `date` in January gives the previous December, and `2028-03-01` gives 1 to 29 February. Range maths uses
+UTC calendar arithmetic on the date strings, never the machine's local time zone.
+
+Response:
+
+```json
+{
+  "type": "mtd",
+  "from": "2026-11-01",
+  "to": "2026-11-21",
+  "count": 6,
+  "highest": 182,
+  "lowest": 65,
+  "average": 117,
+  "days": [{ "date": "2026-11-01", "average": 100, "lowest": 100, "highest": 100, "count": 1 }]
+}
+```
+
+- `daily` also returns `readings: [{ id, slot, slotLabel, value, date }]` in slot order. `mtd` and `monthly` return `days`
+  instead (only days that have readings, ordered by date), which feeds the chart.
+- `count`, `highest`, `lowest` and `average` come from a single SQL aggregate query. `average` is `ROUND(AVG(value), 1)`
+  computed in PostgreSQL and returned as a JSON number. For example 97, 98, 98 gives `97.7`, 100, 100, 101 gives `100.3` and
+  101, 102 gives `101.5`. A whole average such as 117 is returned as `117` and shown as `117.0` in the UI.
+- Validation, in order: `type` ("Please choose a valid report type."), `date` ("Please choose a valid date."), and a
+  future date in `Asia/Kolkata` ("Date cannot be in the future."). All return 400.
+
+**Empty state (assumption).** When there are no readings in the range the API still returns `200` with `count: 0` and
+`highest`, `lowest` and `average` all `null` (never `0`). The dashboard then shows a "No readings in this period yet" message
+instead of stat cards, and on the Daily tab offers an "Add a reading" button for the selected date.
+
+### Dashboard reports
+
+The reports panel follows the dashboard's selected date (`?date=`). The active tab is stored in the URL as
+`?report=daily|mtd|monthly` (anything else falls back to `daily`). Creating, editing or deleting a reading refreshes the
+reports immediately.
+
 ## Server tests and the test database
 
 Server tests run against a real PostgreSQL database named `sweety_test`, separate from the development `sweety` database.
