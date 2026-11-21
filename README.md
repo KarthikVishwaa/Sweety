@@ -39,6 +39,26 @@ npm run db:down      # stop the containers (data is kept in named volumes)
 Postgres is published on host port **5434** and Redis on **6380** (see Notes). Credentials are the dev defaults in
 `docker-compose.yml` and `.env.example`.
 
+### Demo data
+
+```bash
+npm run seed
+```
+
+Creates (or resets) a demo patient and fills in realistic readings so you can log in and see everything straight away.
+
+| Field    | Value           |
+| -------- | --------------- |
+| Name     | Ramesh Kumar    |
+| Email    | demo@sweety.app |
+| Password | `Demo@1234`     |
+
+This is a published demo credential, not a secret. The seed is idempotent: it upserts the demo user and replaces that user's
+readings in a single transaction, so running it twice gives identical data, and it never touches any other user. It covers
+every day from the first day of the previous month up to today (Asia/Kolkata), is deterministic (a seeded PRNG, no
+`Math.random`), mostly in range with some highs and lows, leaves some days partly filled and a couple empty, and refuses to
+run when `NODE_ENV=production`.
+
 ## Run
 
 ```bash
@@ -86,15 +106,30 @@ All readings routes require a logged-in user and every query is scoped to that u
 belongs to someone else, returns `404 "Reading not found."` so its existence is never revealed. Each reading is returned as
 `{ id, date, slot, slotLabel, value, createdAt, updatedAt }`, where `date` is a plain `YYYY-MM-DD` string.
 
-| Method | Path                | Body                     | Success            | Notes                               |
-| ------ | ------------------- | ------------------------ | ------------------ | ----------------------------------- |
-| GET    | `/api/readings`     | query `?date=YYYY-MM-DD` | `200 { readings }` | Ordered by slot, empty list if none |
-| POST   | `/api/readings`     | `{ date, slot, value }`  | `201 { reading }`  |                                     |
-| PUT    | `/api/readings/:id` | `{ date, slot, value }`  | `200 { reading }`  | Full replace, same rules as create  |
-| DELETE | `/api/readings/:id` | none                     | `204`              |                                     |
+| Method | Path                | Body                             | Success              | Notes                              |
+| ------ | ------------------- | -------------------------------- | -------------------- | ---------------------------------- |
+| GET    | `/api/readings`     | query `?date`, `?page`, `?limit` | `200 { data, meta }` | Paginated, see below               |
+| POST   | `/api/readings`     | `{ date, slot, value }`          | `201 { reading }`    |                                    |
+| PUT    | `/api/readings/:id` | `{ date, slot, value }`          | `200 { reading }`    | Full replace, same rules as create |
+| DELETE | `/api/readings/:id` | none                             | `204`                |                                    |
 
 Slots, in display order: `morning_fasting` (Morning (fasting)), `after_breakfast` (After breakfast), `after_lunch`
 (After lunch), `after_dinner` (After dinner).
+
+### Listing and pagination
+
+`GET /api/readings` always returns the envelope `{ data: Reading[], meta: { page, limit, total, totalPages } }`.
+
+| Query   | Default | Rules                                              | Error message                                   |
+| ------- | ------- | -------------------------------------------------- | ----------------------------------------------- |
+| `date`  | none    | Optional `YYYY-MM-DD`; limits the list to that day | Please choose a valid date.                     |
+| `page`  | `1`     | Whole number, 1 or more                            | Page must be a whole number of 1 or more.       |
+| `limit` | `20`    | Whole number, 1 to 100                             | Limit must be a whole number between 1 and 100. |
+
+Without `date` the response covers all of the user's readings, newest date first, then slot order. A page past the last one
+returns `data: []` with the correct `meta`. `totalPages` is `0` when there are no readings. The query uses one `COUNT` and one
+`LIMIT/OFFSET` query, both scoped to the user, and is served by the existing `(user_id, reading_date)` index (scanned
+backwards), so no extra index was needed.
 
 ### Validation order
 
@@ -174,6 +209,27 @@ The reports panel follows the dashboard's selected date (`?date=`). The active t
 `?report=daily|mtd|monthly` (anything else falls back to `daily`). Creating, editing or deleting a reading refreshes the
 reports immediately.
 
+## History page
+
+`/history` (login required, linked from the header) lists every reading, newest first: date, time slot, value, status badge
+and Edit and Delete actions that reuse the dashboard's dialogs. A table is shown from the `md` breakpoint up and a card list on
+phones. The page and the rows per page (10, 20 or 50) live in the URL (`?page=2&limit=10`); invalid values fall back to page 1
+and 20 rows. The previous page stays on screen while the next one loads, changing the page size returns to page 1, and
+deleting the last reading on a page moves back one page. Editing or deleting refreshes the dashboard and reports too.
+
+## Animation and reduced motion
+
+- One `MotionConfig reducedMotion="user"` wraps the app, so Motion's transform animations (slides, shake, tap scale, the
+  empty-state float) are switched off when the OS asks for reduced motion. Only opacity fades remain.
+- Components call `useReducedMotion` only where they need a different result: the error banner (it animates height), the
+  Recharts line draw (`isAnimationActive`), and the route transition, which is skipped entirely.
+- NumberFlow and AutoAnimate honour `prefers-reduced-motion` themselves. Skeleton pulsing is disabled in CSS.
+- Durations, easings, stagger and variants are shared presets in `client/src/lib/motion.ts`. Nothing animates for longer than
+  about 400ms, apart from the chart draw and the looping droplet on the empty state.
+- Route changes fade and slide by 8px (`RootLayout`), and primary buttons give a small tap scale.
+- Links have a visible focus outline, tabs and dialogs use Base UI's ARIA roles, and the pagination `nav` is labelled
+  "Pagination" with `aria-current` on the current page.
+
 ## Server tests and the test database
 
 Server tests run against a real PostgreSQL database named `sweety_test`, separate from the development `sweety` database.
@@ -211,6 +267,13 @@ All variables are validated with Zod in `server/src/config/env.ts`. A missing or
 - **shadcn/ui.** Installed components: button, input, label, card, dialog, select, calendar, popover, skeleton.
   The registry's `form` entry is empty in the current shadcn style, which replaced it with `field`, so `form` is not installed.
   Components in `client/src/components/ui` are generated and excluded from ESLint.
+- **Seed assumptions.** The demo data runs from the 1st of the previous month to today in `Asia/Kolkata`, so the amount of
+  data grows through the month. Today always has at least one reading. The deterministic generator is seeded with a constant,
+  so the same dates give the same values.
+- **Pagination assumptions.** `totalPages` is `0` for an empty list; the History page then shows its empty state instead of
+  the pagination controls. After signing in the app always opens the dashboard, even if you arrived from `/history`.
+- **Bundles.** Vendor libraries are split into separate chunks (`vite.config.ts`) and route pages and the chart are loaded
+  lazily, so no chunk exceeds 500 kB.
 - **Redis and BullMQ** are installed and configured via `REDIS_URL`, but nothing uses them yet.
 - **Dependency audit.** `npm audit` reports moderate advisories in `glob`/`minimatch` pulled in by `node-pg-migrate`, a dev-only CLI
   that is not part of the running server. The only suggested fix is a downgrade, so it is left as is.
