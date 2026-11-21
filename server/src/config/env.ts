@@ -13,7 +13,10 @@ const envSchema = z.object({
   JWT_SECRET: z.string().min(32, 'JWT_SECRET must be at least 32 characters'),
   JWT_EXPIRES_IN: z.string().min(1),
   TZ: z.string().min(1).default('Asia/Kolkata'),
+  COOKIE_SECURE: z.stringbool().optional(),
 });
+
+export const ENV_KEYS = Object.keys(envSchema.shape);
 
 const parsed = envSchema.safeParse(process.env);
 
@@ -21,4 +24,7 @@ if (!parsed.success) {
   throw new Error(`Invalid environment configuration:\n${z.prettifyError(parsed.error)}`);
 }
 
-export const env = parsed.data;
+export const env = {
+  ...parsed.data,
+  COOKIE_SECURE: parsed.data.COOKIE_SECURE ?? parsed.data.NODE_ENV === 'production',
+};

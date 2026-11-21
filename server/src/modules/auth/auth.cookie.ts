@@ -6,7 +6,7 @@ export const AUTH_COOKIE_NAME = 'sweety_token';
 const baseOptions: CookieOptions = {
   httpOnly: true,
   sameSite: 'lax',
-  secure: env.NODE_ENV === 'production',
+  secure: env.COOKIE_SECURE,
   path: '/',
 };
 
