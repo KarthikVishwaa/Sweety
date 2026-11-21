@@ -1,7 +1,7 @@
 import { LoaderCircle } from 'lucide-react';
 import type { ReactNode } from 'react';
-import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { PrimaryButton } from './PrimaryButton';
 
 interface SubmitButtonProps {
   pending: boolean;
@@ -11,9 +11,9 @@ interface SubmitButtonProps {
 
 export function SubmitButton({ pending, fullWidth = true, children }: SubmitButtonProps) {
   return (
-    <Button type="submit" size="lg" className={cn(fullWidth && 'w-full')} disabled={pending}>
+    <PrimaryButton type="submit" size="lg" className={cn(fullWidth && 'w-full')} disabled={pending}>
       {pending && <LoaderCircle className="animate-spin" aria-hidden="true" />}
       {children}
-    </Button>
+    </PrimaryButton>
   );
 }
