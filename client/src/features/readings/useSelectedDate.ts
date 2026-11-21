@@ -8,7 +8,15 @@ export function useSelectedDate() {
   const requested = searchParams.get('date');
   const date = requested && isRealDate(requested) && requested <= today ? requested : today;
 
-  const setDate = useCallback((next: string) => setSearchParams({ date: next }), [setSearchParams]);
+  const setDate = useCallback(
+    (next: string) =>
+      setSearchParams((current) => {
+        const params = new URLSearchParams(current);
+        params.set('date', next);
+        return params;
+      }),
+    [setSearchParams],
+  );
 
   return [date, setDate] as const;
 }

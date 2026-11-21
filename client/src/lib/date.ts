@@ -42,3 +42,12 @@ export function addDays(value: string, days: number): string {
 export function formatDisplayDate(value: string): string {
   return format(parseISODate(value), 'EEE, d MMM yyyy');
 }
+
+export function formatShortDate(value: string): string {
+  return format(parseISODate(value), 'd MMM');
+}
+
+export function formatRange(from: string, to: string): string {
+  const end = format(parseISODate(to), 'd MMM yyyy');
+  return from === to ? end : `${formatShortDate(from)} – ${end}`;
+}
