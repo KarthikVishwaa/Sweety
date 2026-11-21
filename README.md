@@ -1,279 +1,579 @@
 # Sweety
 
-A blood glucose tracker: Node/Express + PostgreSQL + React, in an npm workspaces monorepo.
+Sweety is a blood glucose tracker. A patient signs up, logs up to four readings a day (morning fasting, after breakfast,
+after lunch, after dinner) and reviews them as a daily summary, a month-to-date report with a chart, and a previous-month
+report. The backend is Node, Express and PostgreSQL, the frontend is React, and both live in one npm workspaces monorepo.
 
-| Workspace | Stack                                                                |
-| --------- | -------------------------------------------------------------------- |
-| `server/` | Express 5, PostgreSQL (`pg`), Zod, pino, node-pg-migrate, Vitest     |
-| `client/` | React 19, Vite, Tailwind v4, shadcn/ui, TanStack Query, Vitest + RTL |
+## Table of contents
 
-## Prerequisites
+1. [Screenshots](#screenshots)
+2. [Features](#features)
+3. [Tech stack and architecture](#tech-stack-and-architecture)
+4. [Prerequisites and quick start](#prerequisites-and-quick-start)
+5. [Docker quick start](#docker-quick-start)
+6. [Environment variables](#environment-variables)
+7. [Database and migrations](#database-and-migrations)
+8. [Running the tests](#running-the-tests)
+9. [API reference](#api-reference)
+10. [Validation rules](#validation-rules)
+11. [Report definitions](#report-definitions)
+12. [Security notes](#security-notes)
+13. [Notes](#notes)
 
-- Node.js 22+ (`.nvmrc` pins 24)
-- Docker (for PostgreSQL 16 and Redis 7)
+## Screenshots
 
-## Install
+The images below live in [`docs/screenshots/`](docs/screenshots/README.md). Until they are added, GitHub shows them as broken
+images.
+
+| Screen                                | Image                                                                     |
+| ------------------------------------- | ------------------------------------------------------------------------- |
+| Login                                 | ![Login](docs/screenshots/01-login.png)                                   |
+| Dashboard with the four reading slots | ![Dashboard](docs/screenshots/02-dashboard-readings.png)                  |
+| Add reading dialog showing validation | ![Add reading validation](docs/screenshots/03-add-reading-validation.png) |
+| Daily report                          | ![Daily report](docs/screenshots/04-daily-report.png)                     |
+| Month-to-date report with chart       | ![Month to date chart](docs/screenshots/05-month-to-date-chart.png)       |
+| Previous month report                 | ![Previous month](docs/screenshots/06-previous-month.png)                 |
+| History page with pagination          | ![History pagination](docs/screenshots/07-history-pagination.png)         |
+| Mobile layout                         | ![Mobile](docs/screenshots/08-mobile.png)                                 |
+
+## Features
+
+**Core**
+
+- [x] Sign up, log in, log out and a `/me` endpoint, with a JWT in an `httpOnly` cookie
+- [x] Log readings in four fixed slots per day, with add, edit and delete
+- [x] Server-side validation with exact messages: value 40 to 600 mg/dl, a real date that is not in the future, one reading per slot, at most four per day
+- [x] Every reading is private to its owner (per-user isolation on every query)
+- [x] Daily, month-to-date and previous-month reports: highest, lowest, average (one decimal) and count
+- [x] Dashboard with a date picker, previous/next day, and a "n of 4 readings" progress indicator
+- [x] Low / In range / High badges as display hints (shown as text as well as colour)
+
+**Bonus tasks completed**
+
+- [x] Pagination: `GET /api/readings` is paginated, and a History page shows all readings with page and page-size controls kept in the URL
+- [x] Charts: a Recharts line chart of the daily average for month-to-date and previous month, with reference lines at 70 and 180
+- [x] Docker: server and client images, run together with `docker compose --profile full up`
+- [x] Frontend tests: React Testing Library tests for the login form, the add/edit reading form, reports, history pagination and cache handling
+
+**Also included**
+
+- [x] Idempotent demo seed (`npm run seed`) with a demo account
+- [x] GitHub Actions CI (lint, format check, build, tests against PostgreSQL 16)
+- [x] Reduced-motion support and keyboard-visible focus (see [Notes](#notes))
+
+**Not implemented**
+
+- [ ] Redis caching, BullMQ background jobs, a doctor role with doctor features and a 3D gauge. `ioredis` and `bullmq` are installed and `REDIS_URL` is required, but no code uses Redis yet. The `users.role` column allows `doctor`, but every account is a `patient`.
+
+## Tech stack and architecture
+
+| Area     | Technology                                                                                                |
+| -------- | --------------------------------------------------------------------------------------------------------- |
+| Server   | Node 24, Express 5, PostgreSQL 16 (`pg`), Zod 4, bcrypt, jsonwebtoken, helmet, express-rate-limit, pino   |
+| Database | PostgreSQL 16, migrations with node-pg-migrate                                                            |
+| Client   | React 19, Vite 8, Tailwind CSS 4, shadcn/ui on Base UI, React Router 7, TanStack Query 5, React Hook Form |
+| Charts   | Recharts 3                                                                                                |
+| Motion   | Motion 14, NumberFlow, AutoAnimate                                                                        |
+| Tests    | Vitest, Supertest (server), React Testing Library and user-event (client)                                 |
+| Tooling  | ESLint (flat config), Prettier, husky and lint-staged, GitHub Actions                                     |
+
+The server is layered per feature. A route validates input and calls a controller, the controller handles HTTP only, the
+service holds the rules, and the repository holds the SQL (always parameterised). One error handler turns everything into
+`{ "error": { "message", "code", "details?" } }`. The client talks to the API through one axios instance and TanStack Query
+hooks, and the Vite dev server proxies `/api` to the API.
+
+```
+sweety/
+├─ package.json            npm workspaces and root scripts
+├─ docker-compose.yml      postgres + redis, and server + client behind the "full" profile
+├─ .env.example            every environment variable, documented
+├─ .github/workflows/      ci.yml
+├─ docs/screenshots/       screenshots to add (see its README)
+├─ server/
+│  ├─ Dockerfile, docker-entrypoint.sh
+│  ├─ migrations/          users and readings tables
+│  ├─ scripts/seed.ts      thin CLI wrapper for the demo seed
+│  └─ src/
+│     ├─ app.ts, server.ts
+│     ├─ config/           env.ts (Zod-validated environment)
+│     ├─ db/               pg pool
+│     ├─ lib/, utils/      AppError, logger, schema parsing, date helpers
+│     ├─ middleware/       error handler, rate limiters, validate
+│     ├─ modules/          auth, readings, reports, health (routes, controller, service, repository, schemas)
+│     ├─ seed/             demo data generator and seed function
+│     └─ tests/            Vitest and Supertest tests
+└─ client/
+   ├─ Dockerfile, nginx.conf
+   └─ src/
+      ├─ app/              providers and router
+      ├─ components/       ui (shadcn), layout, form
+      ├─ features/         auth, readings, reports (api, hooks, schemas, components)
+      ├─ pages/            Login, Signup, Dashboard, History, NotFound
+      ├─ hooks/, lib/      shared hooks, API client, date and motion helpers
+      └─ test/             test setup
+```
+
+## Prerequisites and quick start
+
+You need Node.js 22 or newer (`.nvmrc` pins 24) and Docker, which provides PostgreSQL and Redis.
 
 ```bash
+# 1. Install dependencies for both workspaces
 npm install
-cp .env.example .env
-```
 
-Open `.env` and set `JWT_SECRET` (at least 32 characters). The server refuses to boot otherwise.
-Generate one with:
-
-```bash
+# 2. Create your environment file and set JWT_SECRET (32+ characters)
+cp .env.example .env            # Windows: copy .env.example .env
 node -e "console.log(require('crypto').randomBytes(48).toString('base64url'))"
-```
+# paste the output after JWT_SECRET= in .env
 
-`npm install` also installs the git hooks (husky). On every commit, lint-staged runs ESLint and Prettier on staged files.
+# 3. Start PostgreSQL 16 and Redis 7 (waits until both are healthy)
+npm run db:up
 
-## Database setup
+# 4. Create the tables
+npm run db:migrate
 
-```bash
-npm run db:up        # start postgres + redis and wait until both are healthy
-npm run db:migrate   # apply migrations in server/migrations
-npm run db:down      # stop the containers (data is kept in named volumes)
-```
-
-Postgres is published on host port **5434** and Redis on **6380** (see Notes). Credentials are the dev defaults in
-`docker-compose.yml` and `.env.example`.
-
-### Demo data
-
-```bash
+# 5. Load demo data (optional but recommended)
 npm run seed
+
+# 6. Run the API and the client together
+npm run dev
 ```
 
-Creates (or resets) a demo patient and fills in realistic readings so you can log in and see everything straight away.
+| What         | URL                              |
+| ------------ | -------------------------------- |
+| Client       | http://localhost:5173            |
+| API          | http://localhost:4000            |
+| Health check | http://localhost:4000/api/health |
 
-| Field    | Value           |
-| -------- | --------------- |
-| Name     | Ramesh Kumar    |
-| Email    | demo@sweety.app |
-| Password | `Demo@1234`     |
+**Demo login** (created by `npm run seed`): `demo@sweety.app` / `Demo@1234`. This is a published demo credential, not a
+secret. You can also create your own account on the sign-up page.
 
-This is a published demo credential, not a secret. The seed is idempotent: it upserts the demo user and replaces that user's
-readings in a single transaction, so running it twice gives identical data, and it never touches any other user. It covers
-every day from the first day of the previous month up to today (Asia/Kolkata), is deterministic (a seeded PRNG, no
-`Math.random`), mostly in range with some highs and lows, leaves some days partly filled and a couple empty, and refuses to
-run when `NODE_ENV=production`.
+Useful scripts, all run from the repository root:
 
-## Run
+| Script                 | What it does                                                 |
+| ---------------------- | ------------------------------------------------------------ |
+| `npm run dev`          | API (tsx watch) and client (Vite) together                   |
+| `npm run build`        | Type-check and build both workspaces                         |
+| `npm run lint`         | ESLint with zero warnings allowed                            |
+| `npm run format`       | Prettier, write                                              |
+| `npm run format:check` | Prettier, check only                                         |
+| `npm test`             | Server and client tests                                      |
+| `npm run verify`       | Lint, format check, build and tests in one go (what CI runs) |
+| `npm run db:up`        | Start only PostgreSQL and Redis                              |
+| `npm run db:down`      | Stop them (data stays in named volumes)                      |
+| `npm run db:migrate`   | Apply database migrations                                    |
+| `npm run seed`         | Create or reset the demo user and its readings               |
+
+PostgreSQL is published on host port **5434** and Redis on **6380**, not the usual 5432 and 6379, so they do not clash with a
+local installation. If you change them, change `docker-compose.yml` and `.env` together.
+
+## Docker quick start
+
+The `full` compose profile runs the whole app: PostgreSQL, Redis, the API and the client behind nginx. Without the profile,
+`npm run db:up` still starts only PostgreSQL and Redis.
 
 ```bash
-npm run dev                  # server (http://localhost:4000) and client (http://localhost:5173) together
-npm run dev -w server        # server only (tsx watch)
-npm run dev -w client        # client only (Vite; proxies /api to http://localhost:4000)
+cp .env.example .env            # then set JWT_SECRET in .env (32+ characters)
+docker compose --profile full up --build -d --wait
 ```
 
-Health check: `curl http://localhost:4000/api/health` returns `{"status":"ok","db":"up"}`, or `503` with
-`{"status":"degraded","db":"down"}` when PostgreSQL is unreachable.
+Then open **http://localhost:8080**. nginx serves the built client, falls back to `index.html` for client routes, and proxies
+`/api` to the server container. The server runs the migrations every time it starts.
 
-## Test, lint, build
+Load the demo data inside the running container:
 
 ```bash
-npm test             # server (Vitest + Supertest) and client (Vitest + Testing Library)
-npm run test -w server
-npm run test -w client
-npm run lint         # ESLint, zero warnings allowed
-npm run format       # Prettier
-npm run build        # type-check and build both workspaces
-npm run start -w server   # run the built server (after npm run build)
+docker compose exec -e ALLOW_DEMO_SEED=true server npm run seed
 ```
 
-## Authentication API
+The stack runs the API with `NODE_ENV=production`, and the seed refuses to run in production unless `ALLOW_DEMO_SEED=true` is
+set, hence the flag. Stop it with `docker compose --profile full down` (add `-v` to delete the database volume as well).
 
-Sessions use a JWT (`{ sub: userId, role }`) stored in an `httpOnly` cookie named `sweety_token` (`SameSite=Lax`,
-`Secure` in production, lifetime from `JWT_EXPIRES_IN`). Errors use `{ "error": { "message", "code", "details?" } }`;
-validation failures return `400` with `details` mapping each field to its message.
+Things to know:
 
-| Method | Path                 | Auth | Body                        | Success                 | Failures                           |
-| ------ | -------------------- | ---- | --------------------------- | ----------------------- | ---------------------------------- |
-| POST   | `/api/auth/register` | no   | `{ name, email, password }` | `201 { user }` + cookie | `400` validation, `409` email used |
-| POST   | `/api/auth/login`    | no   | `{ email, password }`       | `200 { user }` + cookie | `400` validation, `401` bad login  |
-| POST   | `/api/auth/logout`   | no   | none                        | `204`, cookie cleared   |                                    |
-| GET    | `/api/auth/me`       | yes  | none                        | `200 { user }`          | `401` missing or invalid session   |
+- `JWT_SECRET`, `JWT_EXPIRES_IN` and `TZ` are read from your `.env`. If `JWT_SECRET` is empty the server container exits with
+  a message saying so. Everything else (database URLs, `CLIENT_URL=http://localhost:8080`, `COOKIE_SECURE=false`,
+  `TRUST_PROXY=1`) is set in `docker-compose.yml`.
+- `COOKIE_SECURE=false` is needed because the stack is served over plain `http://localhost`. Behind HTTPS leave it unset.
+- The server image runs as the non-root `node` user and has a health check on `/api/health`. The client image runs the
+  unprivileged nginx image and sets a Content-Security-Policy, `X-Frame-Options`, `X-Content-Type-Options`,
+  `Referrer-Policy` and `Permissions-Policy`.
+- The compose file uses the development database password `sweety_dev_password`. Change it before exposing the stack anywhere.
 
-Password rules: 8-72 characters with at least one letter and one number. Email is trimmed and lower-cased and is unique
-case-insensitively. Login returns the same `401` message for an unknown email and a wrong password, and always runs a bcrypt
-comparison so timing does not reveal which accounts exist. Login and register share the stricter rate limiter (20 requests
-per 15 minutes per IP), which is switched off when `NODE_ENV=test`.
+## Environment variables
 
-## Readings API
+Copy `.env.example` to `.env`. The server reads these variables (nothing else), validates them with Zod in
+`server/src/config/env.ts` and refuses to start when one is missing or invalid. The client reads none. A test fails if
+`.env.example` and the schema ever disagree.
 
-All readings routes require a logged-in user and every query is scoped to that user. A reading that does not exist, or
-belongs to someone else, returns `404 "Reading not found."` so its existence is never revealed. Each reading is returned as
-`{ id, date, slot, slotLabel, value, createdAt, updatedAt }`, where `date` is a plain `YYYY-MM-DD` string.
+| Variable          | Purpose                                                                                                                                                                                                        | Example                                                       | Required / default                                   |
+| ----------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------- | ---------------------------------------------------- |
+| `NODE_ENV`        | Runtime mode: development, test or production.                                                                                                                                                                 | `development`                                                 | optional, default `development`                      |
+| `PORT`            | Port the API listens on.                                                                                                                                                                                       | `4000`                                                        | optional, default `4000`                             |
+| `CLIENT_URL`      | The only origin allowed by CORS (credentials are enabled). Matches the Vite dev server.                                                                                                                        | `http://localhost:5173`                                       | required                                             |
+| `DATABASE_URL`    | PostgreSQL connection string. Docker compose publishes Postgres on host port 5434.                                                                                                                             | `postgres://sweety:sweety_dev_password@localhost:5434/sweety` | required                                             |
+| `REDIS_URL`       | Redis connection string. Docker compose publishes Redis on host port 6380. No feature uses it yet.                                                                                                             | `redis://localhost:6380`                                      | required                                             |
+| `JWT_SECRET`      | Secret used to sign auth tokens, minimum 32 characters. Left empty on purpose so the server refuses to start until you set it.                                                                                 | _(empty on purpose)_                                          | required, 32+ characters                             |
+| `JWT_EXPIRES_IN`  | Token and cookie lifetime, for example 15m or 1h.                                                                                                                                                              | `15m`                                                         | required                                             |
+| `TZ`              | Time zone used to decide what "today" is (future-date checks, seed data).                                                                                                                                      | `Asia/Kolkata`                                                | optional, default `Asia/Kolkata`                     |
+| `COOKIE_SECURE`   | Send the auth cookie over HTTPS only. Defaults to true when NODE_ENV=production, otherwise false. Set it to false to run a production build over plain http://localhost (the Docker "full" profile does this). | `false`                                                       | optional, default `true` in production, else `false` |
+| `TRUST_PROXY`     | How many reverse proxies sit in front of the API (0 when none). Set to 1 behind the bundled nginx so rate limiting sees real client IPs.                                                                       | `0`                                                           | optional, default `0`                                |
+| `ALLOW_DEMO_SEED` | Lets "npm run seed" run when NODE_ENV=production. Only for throwaway demo stacks; leave false everywhere else.                                                                                                 | `false`                                                       | optional, default `false`                            |
 
-| Method | Path                | Body                             | Success              | Notes                              |
-| ------ | ------------------- | -------------------------------- | -------------------- | ---------------------------------- |
-| GET    | `/api/readings`     | query `?date`, `?page`, `?limit` | `200 { data, meta }` | Paginated, see below               |
-| POST   | `/api/readings`     | `{ date, slot, value }`          | `201 { reading }`    |                                    |
-| PUT    | `/api/readings/:id` | `{ date, slot, value }`          | `200 { reading }`    | Full replace, same rules as create |
-| DELETE | `/api/readings/:id` | none                             | `204`                |                                    |
+## Database and migrations
 
-Slots, in display order: `morning_fasting` (Morning (fasting)), `after_breakfast` (After breakfast), `after_lunch`
-(After lunch), `after_dinner` (After dinner).
+Migrations live in `server/migrations` and run with `npm run db:migrate` (the Docker server runs them on startup). Both have a
+working `down`.
 
-### Listing and pagination
+**`users`**: `id` (uuid, generated), `name`, `email`, `password_hash`, `role` (`patient` or `doctor`, default `patient`),
+`created_at`. A unique index on `lower(email)` makes emails unique regardless of letter case.
 
-`GET /api/readings` always returns the envelope `{ data: Reading[], meta: { page, limit, total, totalPages } }`.
+**`readings`**: `id` (uuid, generated), `user_id` (references `users`, deleted with the user), `reading_date` (a `date`),
+`slot` (`morning_fasting`, `after_breakfast`, `after_lunch` or `after_dinner`), `value` (integer, 40 to 600),
+`created_at`, `updated_at`. There is an index on `(user_id, reading_date)`.
 
-| Query   | Default | Rules                                              | Error message                                   |
-| ------- | ------- | -------------------------------------------------- | ----------------------------------------------- |
-| `date`  | none    | Optional `YYYY-MM-DD`; limits the list to that day | Please choose a valid date.                     |
-| `page`  | `1`     | Whole number, 1 or more                            | Page must be a whole number of 1 or more.       |
-| `limit` | `20`    | Whole number, 1 to 100                             | Limit must be a whole number between 1 and 100. |
+**Why `UNIQUE (user_id, reading_date, slot)`?** The product rule is one reading per slot per day. The service checks it first
+so it can return a friendly 409, but two simultaneous requests could both pass that check. The database constraint is the final
+safety net: a violation (`23505`) is caught and mapped to the same 409 message. With four slots it also means a day can never
+hold more than four readings.
 
-Without `date` the response covers all of the user's readings, newest date first, then slot order. A page past the last one
-returns `data: []` with the correct `meta`. `totalPages` is `0` when there are no readings. The query uses one `COUNT` and one
-`LIMIT/OFFSET` query, both scoped to the user, and is served by the existing `(user_id, reading_date)` index (scanned
-backwards), so no extra index was needed.
+`DATE` columns are returned as plain `YYYY-MM-DD` strings (a pg type parser in `server/src/db/pool.ts`), so a time zone can
+never shift a reading to a different day.
 
-### Validation order
+## Running the tests
 
-Rules run in this order and only the first failure is returned. The error is
-`{ error: { message, code, details } }` and `details` is keyed by field (`value`, `date` or `slot`) so the UI can attach the message to the right input.
+```bash
+npm test                  # server and client
+npm run test -w server    # server only
+npm run test -w client    # client only
+npm run verify            # lint, format check, build and tests
+```
 
-| #   | Rule                                              | Status | Message                                                |
-| --- | ------------------------------------------------- | ------ | ------------------------------------------------------ |
-| 1   | Value missing or empty                            | 400    | Please enter a glucose value.                          |
-| 2   | Value not a whole number from 40 to 600           | 400    | Value must be between 40 and 600 mg/dl.                |
-| 3   | Date missing or not a real `YYYY-MM-DD` date      | 400    | Please choose a valid date.                            |
-| 4   | Slot not one of the four keys                     | 400    | Please choose a time slot.                             |
-| 5   | Date in the future                                | 400    | Date cannot be in the future.                          |
-| 6   | The user already has 4 readings on that date      | 409    | You can add only 4 readings per day.                   |
-| 7   | The user already has a reading for that slot/date | 409    | You already have an After lunch reading for this date. |
+Server tests need PostgreSQL (`npm run db:up`). They use a separate `sweety_test` database on the same server: a global setup
+creates it if needed and applies the real migrations, and each test starts with `TRUNCATE users CASCADE`. Your development
+database is never touched. Current totals: 143 server tests and 38 client tests.
 
-Rules 6 and 7 exclude the reading being edited, so changing only the value never conflicts, while moving a reading to a taken
-slot or a full date does. The database unique constraint on `(user_id, reading_date, slot)` is the final safety net: a race
-that slips past rule 7 is mapped to the same 409 message.
+| Where  | File                         | Covers                                                                                     |
+| ------ | ---------------------------- | ------------------------------------------------------------------------------------------ |
+| server | `auth.test.ts`               | register, login, logout, `/me`, hashed passwords, duplicate emails, identical 401s         |
+| server | `readings.test.ts`           | create, update, delete, every validation rule and message, IST "today", per-user isolation |
+| server | `readingsPagination.test.ts` | page and limit defaults, ordering, out-of-range pages, invalid values, isolation           |
+| server | `reports.test.ts`            | report maths and rounding, date ranges end to end, empty state, isolation, validation      |
+| server | `reportRange.test.ts`        | the date-range helper (January, leap years, month ends)                                    |
+| server | `date.test.ts`               | the IST "today" helper around midnight, calendar-date checks                               |
+| server | `seed.test.ts`               | seed idempotency, rules, other users untouched, production guard                           |
+| server | `cookieSecure.test.ts`       | the `COOKIE_SECURE` flag and its defaults                                                  |
+| server | `envExample.test.ts`         | `.env.example` lists exactly the variables the server reads                                |
+| server | `health.test.ts`             | health endpoint, 404 shape, no `x-powered-by`                                              |
+| client | `LoginPage.test.tsx`         | login form validation and submission                                                       |
+| client | `ReadingDialog.test.tsx`     | add and edit form: validation, boundaries, server errors on the right field, pending state |
+| client | `ReportsSection.test.tsx`    | report values and badges, tab switching, empty state, error and retry                      |
+| client | `HistoryPage.test.tsx`       | pagination, URL parameters, fallbacks, empty state                                         |
+| client | `useReadings.test.tsx`       | reading changes refresh the reports and readings queries                                   |
+| client | `useAuth.test.tsx`           | cached user data is discarded on login and logout                                          |
+| client | `readings.constants.test.ts` | glucose band boundaries                                                                    |
 
-### "Today" is computed in Asia/Kolkata
+## API reference
 
-"Future" is judged against the current date in the timezone from the `TZ` setting (`Asia/Kolkata` by default), not UTC or
-the server's local zone. A reading logged at 00:30 IST today is accepted even though it is still yesterday in UTC. The client
-makes the same assumption when it disables future dates in the calendar.
+All paths are under `/api`. Request and response bodies are JSON. Authenticated routes read the `sweety_token` cookie, so
+send requests with credentials (`curl -b cookiejar`, `fetch(..., { credentials: 'include' })`).
 
-### Glucose bands are display hints only
+Every error has the same shape: `{ "error": { "message": "...", "code": "...", "details": { "field": "message" } } }`
+(`details` only appears for validation and slot conflicts). Codes you can get: `VALIDATION_ERROR`, `EMAIL_TAKEN`,
+`INVALID_CREDENTIALS`, `UNAUTHENTICATED`, `SLOT_TAKEN`, `DAILY_LIMIT_REACHED`, `READING_NOT_FOUND`, `NOT_FOUND`,
+`RATE_LIMITED`, `PAYLOAD_TOO_LARGE`, `INVALID_JSON` and `INTERNAL_ERROR`.
 
-The dashboard labels a value below 70 mg/dl as **Low**, 70 to 180 as **In range** and above 180 as **High**. The thresholds
-live in one constant (`GLUCOSE_THRESHOLDS` in `client/src/features/readings/readings.constants.ts`). They are visual hints,
-not medical advice, and they are not used for any server-side validation. Talk to your doctor about your own targets.
+| Method | Path                 | Auth | Purpose                                       |
+| ------ | -------------------- | ---- | --------------------------------------------- |
+| GET    | `/api/health`        | no   | API and database status                       |
+| POST   | `/api/auth/register` | no   | Create an account and log in                  |
+| POST   | `/api/auth/login`    | no   | Log in                                        |
+| POST   | `/api/auth/logout`   | no   | Clear the cookie                              |
+| GET    | `/api/auth/me`       | yes  | The current user                              |
+| GET    | `/api/readings`      | yes  | List readings (paginated, optional date)      |
+| POST   | `/api/readings`      | yes  | Create a reading                              |
+| PUT    | `/api/readings/:id`  | yes  | Replace a reading                             |
+| DELETE | `/api/readings/:id`  | yes  | Delete a reading                              |
+| GET    | `/api/reports`       | yes  | Daily, month-to-date or previous-month report |
 
-## Reports API
+### Health
 
-`GET /api/reports?type=daily|mtd|monthly&date=YYYY-MM-DD` (login required, scoped to the current user).
+`GET /api/health` returns `200 {"status":"ok","db":"up"}`, or `503 {"status":"degraded","db":"down"}` when PostgreSQL is
+unreachable.
 
-| `type`    | Range covered                                                                     |
-| --------- | --------------------------------------------------------------------------------- |
-| `daily`   | `from = to = date`                                                                |
-| `mtd`     | The 1st of the month containing `date`, up to and including `date`                |
-| `monthly` | The **whole calendar month before** the month containing `date` (1st to last day) |
+### Auth
 
-Examples: `date=2026-10-15` gives daily `2026-10-15`, mtd `2026-10-01` to `2026-10-15`, monthly `2026-09-01` to
-`2026-09-30`. A `date` in January gives the previous December, and `2028-03-01` gives 1 to 29 February. Range maths uses
-UTC calendar arithmetic on the date strings, never the machine's local time zone.
+`POST /api/auth/register` with `{ "name", "email", "password" }` returns `201`, sets the cookie and returns the user. The
+password hash is never returned.
 
-Response:
+```json
+{
+  "user": {
+    "id": "90af9c08-55d9-400d-b65f-8c6515be887d",
+    "name": "Asha Rao",
+    "email": "asha@example.com",
+    "role": "patient"
+  }
+}
+```
+
+Errors: `400` validation, `409 {"error":{"message":"An account with this email already exists.","code":"EMAIL_TAKEN"}}`.
+
+```json
+{
+  "error": {
+    "message": "Please correct the highlighted fields.",
+    "code": "VALIDATION_ERROR",
+    "details": {
+      "name": "Name is required",
+      "email": "Enter a valid email address",
+      "password": "Password must be at least 8 characters"
+    }
+  }
+}
+```
+
+`POST /api/auth/login` with `{ "email", "password" }` returns `200` with the same `{ user }` body and sets the cookie. Any
+failure returns `401 {"error":{"message":"Invalid email or password.","code":"INVALID_CREDENTIALS"}}`, the same for an
+unknown email and a wrong password.
+
+`POST /api/auth/logout` returns `204` and clears the cookie. `GET /api/auth/me` returns `200 { user }`, or
+`401 {"error":{"message":"Authentication required.","code":"UNAUTHENTICATED"}}` without a valid cookie.
+
+The cookie is `sweety_token`, `HttpOnly`, `SameSite=Lax`, `Path=/`, with `Max-Age` equal to `JWT_EXPIRES_IN` and `Secure`
+according to `COOKIE_SECURE`.
+
+### Readings
+
+A reading is returned as `{ id, date, slot, slotLabel, value, createdAt, updatedAt }`. Slots, in display order:
+`morning_fasting` (Morning (fasting)), `after_breakfast` (After breakfast), `after_lunch` (After lunch), `after_dinner`
+(After dinner). A reading that does not exist, or belongs to someone else, returns
+`404 {"error":{"message":"Reading not found.","code":"READING_NOT_FOUND"}}`, so its existence is never revealed.
+
+`POST /api/readings` with `{ "date": "2026-10-14", "slot": "after_dinner", "value": 140 }` returns `201`:
+
+```json
+{
+  "reading": {
+    "id": "516b27e4-52ae-4abd-8648-218f419f1874",
+    "date": "2026-10-14",
+    "slot": "after_dinner",
+    "value": 140,
+    "createdAt": "2026-11-21T13:43:56.110Z",
+    "updatedAt": "2026-11-21T13:43:56.110Z",
+    "slotLabel": "After dinner"
+  }
+}
+```
+
+`PUT /api/readings/:id` takes the same body and returns `200 { reading }`. It follows the same rules as create, except that
+the reading being edited is ignored when counting readings and checking the slot. `DELETE /api/readings/:id` returns `204`.
+
+`GET /api/readings` always returns an envelope:
+
+| Query   | Default | Rule                                 |
+| ------- | ------- | ------------------------------------ |
+| `date`  | none    | Optional `YYYY-MM-DD`; only that day |
+| `page`  | `1`     | Whole number, 1 or more              |
+| `limit` | `20`    | Whole number, 1 to 100               |
+
+Without `date` it returns all of your readings, newest date first and then slot order. With `GET /api/readings?date=2026-10-15`:
+
+```json
+{
+  "data": [
+    {
+      "id": "b5b8e99d-...",
+      "date": "2026-10-15",
+      "slot": "morning_fasting",
+      "value": 95,
+      "slotLabel": "Morning (fasting)",
+      "createdAt": "...",
+      "updatedAt": "..."
+    },
+    {
+      "id": "e793918d-...",
+      "date": "2026-10-15",
+      "slot": "after_lunch",
+      "value": 182,
+      "slotLabel": "After lunch",
+      "createdAt": "...",
+      "updatedAt": "..."
+    }
+  ],
+  "meta": { "page": 1, "limit": 20, "total": 2, "totalPages": 1 }
+}
+```
+
+A page past the last one returns `data: []` with the correct `meta`. `totalPages` is `0` when there are no readings.
+
+Example errors:
+
+```json
+{ "error": { "message": "Value must be between 40 and 600 mg/dl.", "code": "VALIDATION_ERROR", "details": { "value": "Value must be between 40 and 600 mg/dl." } } }
+{ "error": { "message": "You already have an After dinner reading for this date.", "code": "SLOT_TAKEN", "details": { "slot": "You already have an After dinner reading for this date." } } }
+```
+
+### Reports
+
+`GET /api/reports?type=daily|mtd|monthly&date=YYYY-MM-DD`. Example with `date=2026-10-15`, `type=mtd`, for a user with readings
+on 1, 10, 14 and 15 October:
 
 ```json
 {
   "type": "mtd",
-  "from": "2026-11-01",
-  "to": "2026-11-21",
-  "count": 6,
+  "from": "2026-10-01",
+  "to": "2026-10-15",
+  "count": 5,
   "highest": 182,
-  "lowest": 65,
-  "average": 117,
-  "days": [{ "date": "2026-11-01", "average": 100, "lowest": 100, "highest": 100, "count": 1 }]
+  "lowest": 95,
+  "average": 133.4,
+  "days": [
+    { "date": "2026-10-01", "average": 100, "lowest": 100, "highest": 100, "count": 1 },
+    { "date": "2026-10-10", "average": 150, "lowest": 150, "highest": 150, "count": 1 },
+    { "date": "2026-10-14", "average": 140, "lowest": 140, "highest": 140, "count": 1 },
+    { "date": "2026-10-15", "average": 138.5, "lowest": 95, "highest": 182, "count": 2 }
+  ]
 }
 ```
 
-- `daily` also returns `readings: [{ id, slot, slotLabel, value, date }]` in slot order. `mtd` and `monthly` return `days`
-  instead (only days that have readings, ordered by date), which feeds the chart.
-- `count`, `highest`, `lowest` and `average` come from a single SQL aggregate query. `average` is `ROUND(AVG(value), 1)`
-  computed in PostgreSQL and returned as a JSON number. For example 97, 98, 98 gives `97.7`, 100, 100, 101 gives `100.3` and
-  101, 102 gives `101.5`. A whole average such as 117 is returned as `117` and shown as `117.0` in the UI.
-- Validation, in order: `type` ("Please choose a valid report type."), `date` ("Please choose a valid date."), and a
-  future date in `Asia/Kolkata` ("Date cannot be in the future."). All return 400.
+`daily` returns `readings: [{ id, slot, slotLabel, value, date }]` in slot order instead of `days`. `highest`, `lowest` and
+`average` are `null` when `count` is `0`. Errors are `400` with the messages in the next section.
 
-**Empty state (assumption).** When there are no readings in the range the API still returns `200` with `count: 0` and
-`highest`, `lowest` and `average` all `null` (never `0`). The dashboard then shows a "No readings in this period yet" message
-instead of stat cards, and on the Daily tab offers an "Add a reading" button for the selected date.
+## Validation rules
 
-### Dashboard reports
+Errors are returned as `400` (bad input) or `409` (conflict). For readings and reports only the **first** failing rule is
+returned, checked in this order:
 
-The reports panel follows the dashboard's selected date (`?date=`). The active tab is stored in the URL as
-`?report=daily|mtd|monthly` (anything else falls back to `daily`). Creating, editing or deleting a reading refreshes the
-reports immediately.
+| #   | Rule (readings: create and update)                                | Status | Message                                                     |
+| --- | ----------------------------------------------------------------- | ------ | ----------------------------------------------------------- |
+| 1   | Value missing or empty                                            | 400    | Please enter a glucose value.                               |
+| 2   | Value not a whole number from 40 to 600                           | 400    | Value must be between 40 and 600 mg/dl.                     |
+| 3   | Date missing or not a real `YYYY-MM-DD` date                      | 400    | Please choose a valid date.                                 |
+| 4   | Slot not one of the four keys                                     | 400    | Please choose a time slot.                                  |
+| 5   | Date after today in Asia/Kolkata                                  | 400    | Date cannot be in the future.                               |
+| 6   | The user already has 4 readings on that date (excluding this one) | 409    | You can add only 4 readings per day.                        |
+| 7   | The user already has a reading in that slot on that date          | 409    | You already have a Morning (fasting) reading for this date. |
 
-## History page
+Rule 7 uses the slot label with the right article: "a Morning (fasting)", "an After breakfast", "an After lunch" or "an After
+dinner". Rule 6 is checked before rule 7. On update, the reading being edited is excluded from both checks, so changing only the
+value never conflicts, while moving it to a taken slot or a full date does.
 
-`/history` (login required, linked from the header) lists every reading, newest first: date, time slot, value, status badge
-and Edit and Delete actions that reuse the dashboard's dialogs. A table is shown from the `md` breakpoint up and a card list on
-phones. The page and the rows per page (10, 20 or 50) live in the URL (`?page=2&limit=10`); invalid values fall back to page 1
-and 20 rows. The previous page stays on screen while the next one loads, changing the page size returns to page 1, and
-deleting the last reading on a page moves back one page. Editing or deleting refreshes the dashboard and reports too.
+| Endpoint            | Rule                                     | Status | Message                                         |
+| ------------------- | ---------------------------------------- | ------ | ----------------------------------------------- |
+| `GET /api/readings` | `date` present but not a real date       | 400    | Please choose a valid date.                     |
+| `GET /api/readings` | `page` not a whole number of 1 or more   | 400    | Page must be a whole number of 1 or more.       |
+| `GET /api/readings` | `limit` not a whole number from 1 to 100 | 400    | Limit must be a whole number between 1 and 100. |
+| `GET /api/reports`  | `type` not `daily`, `mtd` or `monthly`   | 400    | Please choose a valid report type.              |
+| `GET /api/reports`  | `date` missing or not a real date        | 400    | Please choose a valid date.                     |
+| `GET /api/reports`  | `date` in the future (Asia/Kolkata)      | 400    | Date cannot be in the future.                   |
 
-## Animation and reduced motion
+Auth (`POST /api/auth/register` returns the first message for **each** invalid field in `details`):
 
-- One `MotionConfig reducedMotion="user"` wraps the app, so Motion's transform animations (slides, shake, tap scale, the
-  empty-state float) are switched off when the OS asks for reduced motion. Only opacity fades remain.
-- Components call `useReducedMotion` only where they need a different result: the error banner (it animates height), the
-  Recharts line draw (`isAnimationActive`), and the route transition, which is skipped entirely.
-- NumberFlow and AutoAnimate honour `prefers-reduced-motion` themselves. Skeleton pulsing is disabled in CSS.
-- Durations, easings, stagger and variants are shared presets in `client/src/lib/motion.ts`. Nothing animates for longer than
-  about 400ms, apart from the chart draw and the looping droplet on the empty state.
-- Route changes fade and slide by 8px (`RootLayout`), and primary buttons give a small tap scale.
-- Links have a visible focus outline, tabs and dialogs use Base UI's ARIA roles, and the pagination `nav` is labelled
-  "Pagination" with `aria-current` on the current page.
+| Field    | Rules                                              | Messages                                                                                                                                                                                       |
+| -------- | -------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| name     | trimmed, 2 to 60 characters                        | Name is required / Name must be at least 2 characters / Name must be at most 60 characters                                                                                                     |
+| email    | trimmed, lower-cased, valid address                | Email is required / Enter a valid email address                                                                                                                                                |
+| password | 8 to 72 characters, at least one letter and number | Password is required / Password must be at least 8 characters / Password must be at most 72 characters / Password must contain at least one letter / Password must contain at least one number |
 
-## Server tests and the test database
+`POST /api/auth/login` only requires an email and a non-empty password ("Password is required"). Requests over the limits return
+`429 {"error":{"message":"Too many requests, please try again later","code":"RATE_LIMITED"}}`, bodies over 10 KB return `413`
+(`PAYLOAD_TOO_LARGE`) and malformed JSON returns `400` (`INVALID_JSON`).
 
-Server tests run against a real PostgreSQL database named `sweety_test`, separate from the development `sweety` database.
-On every `npm test -w server`, `src/tests/globalSetup.ts` creates `sweety_test` if it does not exist (on the same server as
-`DATABASE_URL`) and applies all migrations to it. Each test starts with `TRUNCATE users CASCADE` (which also clears readings). Postgres must be running
-(`npm run db:up`). The development database is never touched.
+## Report definitions
 
-## Environment variables
+All reports are for the logged-in user and are based on the selected date. Take the selected date **15 Oct 2026**:
 
-| Variable         | Purpose                                          |
-| ---------------- | ------------------------------------------------ |
-| `NODE_ENV`       | `development`, `test` or `production`            |
-| `PORT`           | Server port (default 4000)                       |
-| `CLIENT_URL`     | The only origin allowed by CORS (credentials on) |
-| `DATABASE_URL`   | PostgreSQL connection string                     |
-| `REDIS_URL`      | Redis connection string                          |
-| `JWT_SECRET`     | Signing secret, minimum 32 characters            |
-| `JWT_EXPIRES_IN` | Token lifetime, for example `15m`                |
-| `TZ`             | Process timezone (default `Asia/Kolkata`)        |
+| Report         | `type`    | Range                                                     | Example              |
+| -------------- | --------- | --------------------------------------------------------- | -------------------- |
+| Daily          | `daily`   | The selected date only                                    | 15 Oct 2026          |
+| Month to date  | `mtd`     | The 1st of the selected date's month up to the date       | 1 Oct to 15 Oct 2026 |
+| Previous month | `monthly` | The whole calendar month before the selected date's month | 1 Sep to 30 Sep 2026 |
 
-All variables are validated with Zod in `server/src/config/env.ts`. A missing or invalid value stops the server at startup.
+Edge cases: a January date gives the previous December of the previous year, `2028-03-01` gives 1 to 29 February, and
+month-to-date on the 1st is a single day. The range maths works on `YYYY-MM-DD` strings with UTC calendar arithmetic, never the
+server's local time zone.
 
-## Server conventions
+`highest`, `lowest`, `average` and `count` come from one SQL aggregate query. The average is
+`ROUND(AVG(value)::numeric, 1)`, rounded to **one decimal** in PostgreSQL and returned as a JSON number (for example 97, 98, 98
+gives 97.7, and 101, 102 gives 101.5). A whole average such as 117 is returned as `117` and displayed as `117.0`. The average
+is over all readings in the range, not an average of daily averages.
 
-- **Parameterised queries only.** Never build SQL by concatenating or interpolating user input; pass values as
-  parameters (`pool.query('SELECT * FROM t WHERE id = $1', [id])`).
-- Errors are thrown as `AppError` and rendered by one handler as `{ "error": { "message", "code" } }`. Stack traces are never sent to clients.
-- Security baseline: helmet (default CSP), CORS restricted to `CLIENT_URL`, a global rate limit, a stricter limiter mounted on `/api/auth/*`, a 10kb JSON body limit, hpp, and `x-powered-by` disabled.
-- Feature code lives in `server/src/modules/<feature>/` (routes + controller), added as features arrive.
+With no readings in the range the API still returns `200` with `count: 0` and `null` statistics, and the dashboard shows a
+"No readings in this period yet" message instead of the stat cards.
+
+## Security notes
+
+- **Passwords** are hashed with bcrypt at cost 12 and the hash is never returned. Login compares against a dummy hash when the
+  email is unknown, so unknown email and wrong password return the same message with similar timing.
+- **Sessions** are a JWT (HS256, algorithm pinned on verify) in an `httpOnly`, `SameSite=Lax` cookie; `Secure` is controlled by
+  `COOKIE_SECURE`. The token is never exposed to JavaScript.
+- **Configuration** is validated at startup. The server will not boot without a `JWT_SECRET` of at least 32 characters.
+- **HTTP hardening**: helmet defaults (including its default CSP), `x-powered-by` disabled, a 10 KB JSON body limit, `hpp`, and
+  CORS restricted to `CLIENT_URL` with credentials.
+- **Rate limiting**: 300 requests per 15 minutes per IP for the whole API, and 20 per 15 minutes per IP on login and register.
+  The counters are in memory (one server process).
+- **Input validation** with Zod on every route, plus database `CHECK` and `UNIQUE` constraints as a second line of defence.
+- **SQL injection**: every query is parameterised (`$1`, `$2`, ...); the only interpolated SQL text is fixed column lists.
+- **Data isolation**: every readings and reports query is scoped to the logged-in user's id, and another user's reading looks
+  like it does not exist (404). Tests cover list, update, delete, pagination and report isolation.
+- **Errors**: one central handler, no stack traces in responses, unexpected errors become a generic `INTERNAL_ERROR`.
+- **Client cache**: cached user data is discarded on login, register and logout, so one user's data is never shown to the next.
+- **Docker**: non-root containers, and a restrictive CSP and security headers on the nginx side.
 
 ## Notes
 
-- **Host ports.** Compose maps Postgres to `5434` and Redis to `6380` instead of `5432` and `6379`, because those defaults are
-  commonly taken by a local PostgreSQL install or other containers. Change both `docker-compose.yml` and `.env` together if you need different ports.
-- **shadcn/ui.** Installed components: button, input, label, card, dialog, select, calendar, popover, skeleton.
-  The registry's `form` entry is empty in the current shadcn style, which replaced it with `field`, so `form` is not installed.
-  Components in `client/src/components/ui` are generated and excluded from ESLint.
-- **Seed assumptions.** The demo data runs from the 1st of the previous month to today in `Asia/Kolkata`, so the amount of
-  data grows through the month. Today always has at least one reading. The deterministic generator is seeded with a constant,
-  so the same dates give the same values.
-- **Pagination assumptions.** `totalPages` is `0` for an empty list; the History page then shows its empty state instead of
-  the pagination controls. After signing in the app always opens the dashboard, even if you arrived from `/history`.
-- **Bundles.** Vendor libraries are split into separate chunks (`vite.config.ts`) and route pages and the chart are loaded
-  lazily, so no chunk exceeds 500 kB.
-- **Redis and BullMQ** are installed and configured via `REDIS_URL`, but nothing uses them yet.
-- **Dependency audit.** `npm audit` reports moderate advisories in `glob`/`minimatch` pulled in by `node-pg-migrate`, a dev-only CLI
-  that is not part of the running server. The only suggested fix is a downgrade, so it is left as is.
+### Assumptions
+
+- **"Today" is computed in Asia/Kolkata.** The server uses the `TZ` setting (default `Asia/Kolkata`) for future-date checks and
+  seed data, so a reading logged at 00:30 IST today is accepted even though it is still yesterday in UTC. The client has the
+  time zone fixed to Asia/Kolkata in `client/src/lib/date.ts` and does not read `TZ`.
+- **Previous month** means the whole calendar month before the selected date's month, regardless of which day is selected.
+- **Only the first failing validation rule is returned** for readings, the readings list and reports, in the order shown above.
+  Sign-up returns one message per invalid field.
+- **The glucose bands are display hints, not medical advice.** Below 70 mg/dl is shown as Low, 70 to 180 as In range and above
+  180 as High (one constant, `GLUCOSE_THRESHOLDS`). They are not used by the server. Talk to a doctor about your own targets.
+- **Numeric strings are accepted for `value`.** `"140"` is treated as 140; decimals, signs and text are rejected with the range
+  message.
+- **Emails are case-insensitive** and stored lower-cased. Registering also logs you in.
+- **One reading per slot per day** is a business rule, enforced by the service and the database.
+- **Sessions last `JWT_EXPIRES_IN`** (15 minutes in `.env.example`) and are not refreshed, so you are signed out after that.
+- **After login the app opens the dashboard**, even if you arrived from another page.
+- **Demo data** covers the first day of the previous month to today, is deterministic and always includes today. The seed
+  refuses to run in production unless `ALLOW_DEMO_SEED=true`.
+- **Redis and BullMQ** are installed but unused. The `ioredis` and `bullmq` packages are kept for planned caching and jobs.
+- **Docker** is for running and demonstrating the app on one machine over HTTP, not a production deployment.
+
+### Accessibility and motion
+
+- A single `MotionConfig reducedMotion="user"` switches off Motion's transform animations when the OS asks for reduced
+  motion. Components call `useReducedMotion` only where they need a different result (the error banner, the chart draw, the
+  route transition). NumberFlow and AutoAnimate respect the setting themselves, and skeleton pulsing is disabled in CSS.
+- Presets (durations, easings, stagger) are shared in `client/src/lib/motion.ts`.
+- Interactive controls have visible focus rings, tabs, dialogs and selects use Base UI's ARIA roles, the pagination `nav` is
+  labelled "Pagination" and marks the current page with `aria-current`.
+
+### What I would improve with more time
+
+- **Sessions**: refresh tokens or server-side sessions so a login lasts longer than 15 minutes and can be revoked on logout.
+  Today a logout only clears the cookie, and a copied token stays valid until it expires.
+- **Accounts**: email verification, password reset, changing the password and deleting an account.
+- **CSRF**: the cookie is `SameSite=Lax` and CORS is restricted, but there is no CSRF token or `Origin` check on state-changing requests.
+- **Password limit**: bcrypt truncates at 72 bytes and the validation counts characters, so very long passphrases with
+  multi-byte characters would be silently cut.
+- **End-to-end tests** with Playwright, and automated accessibility checks. I tested the layout in a desktop browser and
+  through tests, not on real phones.
+- **Per-user time zone** instead of one global `TZ`, and one shared source for the client and server (the client currently
+  hard-codes Asia/Kolkata).
+- **Units**: mmol/L as well as mg/dl, and user-specific target ranges instead of the fixed 70 and 180.
+- **Export** of readings and reports to CSV or PDF.
+- **Rate limiting** backed by a shared store (Redis is already a dependency) so limits hold across several server instances.
+- **Redis caching** for reports, background jobs (for example reminders), and the doctor role the schema already allows.
+- **Deployment**: HTTPS termination, secrets management instead of the development database password in `docker-compose.yml`,
+  a smaller server image (it is about 500 MB because it keeps `tsx` and the TypeScript sources to run the seed), and building
+  the Docker images in CI.
+- **Dependency audit**: `npm audit` reports 6 moderate advisories (none high or critical), all from `glob`/`minimatch` through
+  two tools: `node-pg-migrate`, which only runs the migrations in `server/migrations`, and `shadcn`, whose code generator is
+  not part of the app (the client only imports its CSS file at build time). The only fix npm offers is a breaking downgrade of
+  `node-pg-migrate`, so I left it. `node-pg-migrate` is also a runtime dependency of the Docker image, so it is worth updating
+  once a release with fixed dependencies exists.
