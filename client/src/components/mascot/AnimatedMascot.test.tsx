@@ -54,6 +54,18 @@ describe('AnimatedMascot', () => {
     expect(video.closest('[aria-hidden="true"]')).not.toBeNull();
   });
 
+  it.each([
+    ['floating', true],
+    ['waving', true],
+    ['bouncing', true],
+    ['love', false],
+  ] as const)(
+    '%s loops: %s (the love clip plays once and rests on its last frame)',
+    (variant, loops) => {
+      expect(renderMascot(variant).loop).toBe(loops);
+    },
+  );
+
   it('reserves its space with an aspect ratio so nothing shifts while loading', () => {
     const video = renderMascot();
 

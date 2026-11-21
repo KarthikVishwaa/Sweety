@@ -27,4 +27,11 @@ export const MASCOT_SOURCES: Record<MascotVariant, MascotSources> = {
   love: { mp4: loveMp4, webm: loveWebm, poster: lovePoster },
 };
 
+export const MASCOT_LOOPS: Record<MascotVariant, boolean> = {
+  floating: manifest.clips.floating.loop,
+  waving: manifest.clips.waving.loop,
+  bouncing: manifest.clips.bouncing.loop,
+  love: manifest.clips.love.loop,
+};
+
 export const MASCOT_ASPECT_RATIO = `${manifest.width} / ${manifest.height}`;

@@ -31,7 +31,7 @@ export function useMascotPlayback(videoRef: RefObject<HTMLVideoElement | null>, 
     const video = videoRef.current;
     if (!video) return;
 
-    if (shouldPlay) Promise.resolve(video.play()).catch(() => undefined);
+    if (shouldPlay && !video.ended) Promise.resolve(video.play()).catch(() => undefined);
     else video.pause();
   }, [shouldPlay, videoRef]);
 }
