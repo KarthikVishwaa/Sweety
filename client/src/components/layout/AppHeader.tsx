@@ -1,6 +1,6 @@
 import { LogOut } from 'lucide-react';
 import { NavLink } from 'react-router-dom';
-import { BrandMark } from '@/components/layout/BrandMark';
+import { Logo } from '@/components/layout/Logo';
 import { Button, buttonVariants } from '@/components/ui/button';
 import { useLogout } from '@/features/auth/useAuth';
 import { cn } from '@/lib/utils';
@@ -16,7 +16,7 @@ export function AppHeader({ heading }: { heading: string }) {
   return (
     <header className="flex flex-wrap items-center justify-between gap-3">
       <div className="space-y-1">
-        <BrandMark className="text-lg text-teal-700" />
+        <Logo />
         <h1 className="text-2xl font-semibold">{heading}</h1>
       </div>
       <nav aria-label="Main" className="flex items-center gap-1">
