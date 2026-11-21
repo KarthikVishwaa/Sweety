@@ -1,6 +1,6 @@
 import '@testing-library/jest-dom/vitest';
 import { cleanup } from '@testing-library/react';
-import { createElement } from 'react';
+import { cloneElement, createElement, type ReactElement } from 'react';
 import { afterEach, vi } from 'vitest';
 
 vi.mock('@number-flow/react', () => ({
@@ -14,6 +14,20 @@ vi.mock('@number-flow/react', () => ({
     className?: string;
   }) => createElement('span', { className }, new Intl.NumberFormat('en-US', format).format(value)),
 }));
+
+vi.mock('recharts', async (importOriginal) => {
+  const recharts = await importOriginal<typeof import('recharts')>();
+  return {
+    ...recharts,
+    ResponsiveContainer: ({
+      children,
+    }: {
+      children: ReactElement<{ width: number; height: number }>;
+    }) => cloneElement(children, { width: 600, height: 300 }),
+  };
+});
+
+vi.stubGlobal('scrollTo', () => undefined);
 
 vi.stubGlobal(
   'ResizeObserver',

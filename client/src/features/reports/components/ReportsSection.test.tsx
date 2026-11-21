@@ -9,6 +9,7 @@ import { ReportsSection } from './ReportsSection';
 
 vi.mock('../reportsApi');
 
+const LAZY_CHART_TIMEOUT_MS = 5000;
 const DATE = '2026-10-15';
 
 const daily: Report = {
@@ -112,9 +113,11 @@ describe('ReportsSection', () => {
     await userEvent.click(screen.getByRole('tab', { name: 'Month to date' }));
     expect(await screen.findByText('1 Oct – 15 Oct 2026')).toBeInTheDocument();
     expect(
-      await screen.findByRole('img', {
-        name: 'Daily average glucose, 1 Oct to 15 Oct, 2 days with readings',
-      }),
+      await screen.findByRole(
+        'img',
+        { name: 'Daily average glucose, 1 Oct to 15 Oct, 2 days with readings' },
+        { timeout: LAZY_CHART_TIMEOUT_MS },
+      ),
     ).toBeInTheDocument();
 
     await userEvent.click(screen.getByRole('tab', { name: 'Previous month' }));
