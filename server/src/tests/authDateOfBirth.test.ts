@@ -5,7 +5,12 @@ import { pool } from '../db/pool.js';
 import { resetDatabase } from './helpers/db.js';
 
 const NOW = new Date('2026-11-21T06:00:00Z');
-const valid = { name: 'Asha Rao', email: 'asha@example.com', password: 'sweet1234' };
+const valid = {
+  name: 'Asha Rao',
+  email: 'asha@example.com',
+  password: 'sweet1234',
+  bodyModel: 'female',
+};
 
 const register = (dateOfBirth?: unknown) =>
   request(app)
@@ -119,6 +124,7 @@ describe('date of birth validation', () => {
       email: 'Enter a valid email address',
       password: 'Password is required',
       dateOfBirth: 'Please enter your date of birth.',
+      bodyModel: 'Please choose a body model.',
     });
   });
 });

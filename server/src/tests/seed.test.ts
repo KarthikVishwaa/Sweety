@@ -56,11 +56,11 @@ describe('seedDemoData', () => {
     await seedDemoData(NOW);
 
     const { rows } = await pool.query(
-      'SELECT name, role, password_hash FROM users WHERE lower(email) = $1',
+      'SELECT name, role, body_model, password_hash FROM users WHERE lower(email) = $1',
       [DEMO_USER.email],
     );
 
-    expect(rows[0]).toMatchObject({ name: 'Ramesh Kumar', role: 'patient' });
+    expect(rows[0]).toMatchObject({ name: 'Ramesh Kumar', role: 'patient', body_model: 'male' });
     expect(rows[0].password_hash).not.toBe(DEMO_USER.password);
     expect(await bcrypt.compare(DEMO_USER.password, rows[0].password_hash)).toBe(true);
   });
