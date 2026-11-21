@@ -2,6 +2,7 @@ import NumberFlow from '@number-flow/react';
 import type { ReactNode } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { GlucoseBadge } from '@/features/readings/components/GlucoseBadge';
+import { STAT_CARD_HEIGHT } from './statCard.constants';
 
 interface StatCardProps {
   label: string;
@@ -10,7 +11,7 @@ interface StatCardProps {
 
 function StatCard({ label, children }: StatCardProps) {
   return (
-    <Card>
+    <Card className={STAT_CARD_HEIGHT}>
       <CardHeader>
         <CardTitle className="text-sm font-medium text-muted-foreground">{label}</CardTitle>
       </CardHeader>
