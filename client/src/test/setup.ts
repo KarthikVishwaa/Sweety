@@ -24,4 +24,27 @@ vi.stubGlobal(
   },
 );
 
+vi.stubGlobal('matchMedia', (query: string) => ({
+  matches: false,
+  media: query,
+  onchange: null,
+  addEventListener: () => undefined,
+  removeEventListener: () => undefined,
+  addListener: () => undefined,
+  removeListener: () => undefined,
+  dispatchEvent: () => false,
+}));
+
+Element.prototype.animate = () =>
+  ({
+    cancel: () => undefined,
+    finish: () => undefined,
+    play: () => undefined,
+    pause: () => undefined,
+    addEventListener: () => undefined,
+    removeEventListener: () => undefined,
+    finished: Promise.resolve(),
+    onfinish: null,
+  }) as unknown as Animation;
+
 afterEach(cleanup);
