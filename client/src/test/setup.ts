@@ -29,6 +29,19 @@ vi.mock('recharts', async (importOriginal) => {
 
 vi.stubGlobal('scrollTo', () => undefined);
 
+HTMLMediaElement.prototype.play = vi.fn(() => Promise.resolve());
+HTMLMediaElement.prototype.pause = vi.fn();
+HTMLMediaElement.prototype.load = vi.fn();
+
+vi.stubGlobal(
+  'IntersectionObserver',
+  class {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+  },
+);
+
 vi.stubGlobal(
   'ResizeObserver',
   class {
