@@ -15,7 +15,7 @@ function getAuthCookie(response: request.Response): string | undefined {
 }
 
 beforeEach(async () => {
-  await pool.query('TRUNCATE users');
+  await pool.query('TRUNCATE users CASCADE');
 });
 
 afterAll(async () => {
@@ -162,7 +162,7 @@ describe('GET /api/auth/me', () => {
   it('returns 401 when the user no longer exists', async () => {
     const agent = request.agent(app);
     await agent.post('/api/auth/register').send(validUser);
-    await pool.query('TRUNCATE users');
+    await pool.query('TRUNCATE users CASCADE');
 
     const response = await agent.get('/api/auth/me');
 
