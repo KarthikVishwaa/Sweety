@@ -1,5 +1,6 @@
 import type { NextFunction, Request, Response } from 'express';
 import rateLimit from 'express-rate-limit';
+import { env } from '../config/env.js';
 import { AppError } from '../lib/AppError.js';
 
 const FIFTEEN_MINUTES_MS = 15 * 60 * 1000;
@@ -19,6 +20,7 @@ export const globalLimiter = rateLimit({
 export const authLimiter = rateLimit({
   windowMs: FIFTEEN_MINUTES_MS,
   limit: 20,
+  skip: () => env.NODE_ENV === 'test',
   standardHeaders: 'draft-8',
   legacyHeaders: false,
   handler: tooManyRequests,
