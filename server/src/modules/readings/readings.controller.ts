@@ -9,8 +9,8 @@ function currentUserId(req: Request): string {
 }
 
 export async function list(req: Request, res: Response) {
-  const { date } = parseWithSchema(listQuerySchema, req.query, { firstIssueOnly: true });
-  res.json({ readings: await readingsService.listReadings(currentUserId(req), date) });
+  const query = parseWithSchema(listQuerySchema, req.query, { firstIssueOnly: true });
+  res.json(await readingsService.listReadings(currentUserId(req), query));
 }
 
 export async function create(req: Request, res: Response) {

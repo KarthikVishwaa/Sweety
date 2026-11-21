@@ -5,14 +5,29 @@ import type { ReadingInput, ReadingRecord, ReadingSlot } from './readings.types.
 const READING_COLUMNS = `id, reading_date AS date, slot, value,
   created_at AS "createdAt", updated_at AS "updatedAt"`;
 
-export async function listByDate(userId: string, date: string): Promise<ReadingRecord[]> {
+export async function listPage(
+  userId: string,
+  date: string | null,
+  limit: number,
+  offset: number,
+): Promise<ReadingRecord[]> {
   const result = await pool.query<ReadingRecord>(
     `SELECT ${READING_COLUMNS} FROM readings
-     WHERE user_id = $1 AND reading_date = $2
-     ORDER BY array_position($3::text[], slot)`,
-    [userId, date, SLOT_KEYS],
+     WHERE user_id = $1 AND ($2::date IS NULL OR reading_date = $2::date)
+     ORDER BY reading_date DESC, array_position($3::text[], slot)
+     LIMIT $4 OFFSET $5`,
+    [userId, date, SLOT_KEYS, limit, offset],
   );
   return result.rows;
+}
+
+export async function countAll(userId: string, date: string | null): Promise<number> {
+  const result = await pool.query<{ count: number }>(
+    `SELECT count(*)::int AS count FROM readings
+     WHERE user_id = $1 AND ($2::date IS NULL OR reading_date = $2::date)`,
+    [userId, date],
+  );
+  return result.rows[0]?.count ?? 0;
 }
 
 export async function findById(userId: string, id: string): Promise<ReadingRecord | undefined> {

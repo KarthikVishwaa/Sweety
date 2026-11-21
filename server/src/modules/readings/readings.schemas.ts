@@ -1,6 +1,9 @@
 import { z } from 'zod';
 import { isRealCalendarDate, todayInTimeZone } from '../../utils/date.js';
 import {
+  DEFAULT_PAGE,
+  DEFAULT_PAGE_SIZE,
+  MAX_PAGE_SIZE,
   MAX_GLUCOSE_VALUE,
   MIN_GLUCOSE_VALUE,
   READING_MESSAGES,
@@ -46,6 +49,21 @@ export const readingSchema = z
     error: READING_MESSAGES.dateInFuture,
   });
 
-export const listQuerySchema = z.object({ date: dateField });
+function queryInteger(message: string, min: number, max: number, fallback: number) {
+  return z
+    .string({ error: message })
+    .regex(WHOLE_NUMBER, message)
+    .transform(Number)
+    .pipe(z.number().min(min, message).max(max, message))
+    .default(fallback);
+}
+
+export const listQuerySchema = z.object({
+  date: dateField.optional(),
+  page: queryInteger(READING_MESSAGES.pageInvalid, 1, Number.MAX_SAFE_INTEGER, DEFAULT_PAGE),
+  limit: queryInteger(READING_MESSAGES.limitInvalid, 1, MAX_PAGE_SIZE, DEFAULT_PAGE_SIZE),
+});
+
+export type ListQuery = z.infer<typeof listQuerySchema>;
 
 export const readingIdSchema = z.uuid();

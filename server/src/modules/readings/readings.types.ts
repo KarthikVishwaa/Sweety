@@ -17,3 +17,15 @@ export interface ReadingRecord extends ReadingInput {
 export interface Reading extends ReadingRecord {
   slotLabel: string;
 }
+
+export interface PageMeta {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+}
+
+export interface ReadingsPage {
+  data: Reading[];
+  meta: PageMeta;
+}

@@ -20,6 +20,9 @@ export const SLOT_ARTICLES = {
 } as const satisfies Record<(typeof SLOT_KEYS)[number], 'a' | 'an'>;
 
 export const MAX_READINGS_PER_DAY = SLOT_KEYS.length;
+export const DEFAULT_PAGE = 1;
+export const DEFAULT_PAGE_SIZE = 20;
+export const MAX_PAGE_SIZE = 100;
 export const MIN_GLUCOSE_VALUE = 40;
 export const MAX_GLUCOSE_VALUE = 600;
 
@@ -31,4 +34,6 @@ export const READING_MESSAGES = {
   dateInFuture: 'Date cannot be in the future.',
   dailyLimit: `You can add only ${MAX_READINGS_PER_DAY} readings per day.`,
   notFound: 'Reading not found.',
+  pageInvalid: 'Page must be a whole number of 1 or more.',
+  limitInvalid: `Limit must be a whole number between 1 and ${MAX_PAGE_SIZE}.`,
 } as const;

@@ -7,8 +7,14 @@ import {
   SLOT_LABELS,
 } from './readings.constants.js';
 import * as readingsRepository from './readings.repository.js';
-import { readingIdSchema } from './readings.schemas.js';
-import type { Reading, ReadingInput, ReadingRecord, ReadingSlot } from './readings.types.js';
+import { readingIdSchema, type ListQuery } from './readings.schemas.js';
+import type {
+  Reading,
+  ReadingInput,
+  ReadingRecord,
+  ReadingSlot,
+  ReadingsPage,
+} from './readings.types.js';
 
 const UNIQUE_VIOLATION = '23505';
 
@@ -49,8 +55,20 @@ async function assertOwned(userId: string, id: string): Promise<void> {
   if (!isUuid || !(await readingsRepository.findById(userId, id))) throw notFound();
 }
 
-export async function listReadings(userId: string, date: string): Promise<Reading[]> {
-  return (await readingsRepository.listByDate(userId, date)).map(toReading);
+export async function listReadings(
+  userId: string,
+  { date, page, limit }: ListQuery,
+): Promise<ReadingsPage> {
+  const dateFilter = date ?? null;
+  const [records, total] = await Promise.all([
+    readingsRepository.listPage(userId, dateFilter, limit, (page - 1) * limit),
+    readingsRepository.countAll(userId, dateFilter),
+  ]);
+
+  return {
+    data: records.map(toReading),
+    meta: { page, limit, total, totalPages: Math.ceil(total / limit) },
+  };
 }
 
 export async function createReading(userId: string, input: ReadingInput): Promise<Reading> {
