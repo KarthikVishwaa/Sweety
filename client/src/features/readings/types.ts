@@ -15,3 +15,15 @@ export interface ReadingInput {
   slot: ReadingSlot;
   value: number;
 }
+
+export interface PageMeta {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+}
+
+export interface ReadingsPage {
+  data: Reading[];
+  meta: PageMeta;
+}

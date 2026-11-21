@@ -1,4 +1,4 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import * as readingsApi from './readingsApi';
 import type { ReadingInput } from './types';
@@ -10,6 +10,14 @@ export function useReadingsByDate(date: string) {
   return useQuery({
     queryKey: [...READINGS_KEY, date],
     queryFn: () => readingsApi.listReadings(date),
+  });
+}
+
+export function useReadingHistory(page: number, limit: number) {
+  return useQuery({
+    queryKey: [...READINGS_KEY, 'history', page, limit],
+    queryFn: () => readingsApi.listReadingsPage({ page, limit }),
+    placeholderData: keepPreviousData,
   });
 }
 

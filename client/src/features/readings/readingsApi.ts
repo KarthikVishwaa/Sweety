@@ -1,9 +1,19 @@
 import { api } from '@/lib/api';
-import type { Reading, ReadingInput } from './types';
+import type { Reading, ReadingInput, ReadingsPage } from './types';
+
+interface PageParams {
+  page: number;
+  limit: number;
+}
 
 export async function listReadings(date: string): Promise<Reading[]> {
-  const { data } = await api.get<{ readings: Reading[] }>('/readings', { params: { date } });
-  return data.readings;
+  const { data } = await api.get<ReadingsPage>('/readings', { params: { date } });
+  return data.data;
+}
+
+export async function listReadingsPage(params: PageParams): Promise<ReadingsPage> {
+  const { data } = await api.get<ReadingsPage>('/readings', { params });
+  return data;
 }
 
 export async function createReading(input: ReadingInput): Promise<Reading> {
