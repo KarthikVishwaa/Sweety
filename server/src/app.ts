@@ -11,6 +11,7 @@ import { notFound } from './middleware/notFound.js';
 import { globalLimiter } from './middleware/rateLimiters.js';
 import { authRouter } from './modules/auth/auth.routes.js';
 import { healthRouter } from './modules/health/health.routes.js';
+import { readingsRouter } from './modules/readings/readings.routes.js';
 
 export const app = express();
 
@@ -26,6 +27,7 @@ app.use(hpp());
 
 app.use('/api/auth', authRouter);
 app.use('/api/health', healthRouter);
+app.use('/api/readings', readingsRouter);
 
 app.use(notFound);
 app.use(errorHandler);
