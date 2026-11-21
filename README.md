@@ -544,6 +544,44 @@ With no readings in the range the API still returns `200` with `count: 0` and `n
 - **Redis and BullMQ** are installed but unused. The `ioredis` and `bullmq` packages are kept for planned caching and jobs.
 - **Docker** is for running and demonstrating the app on one machine over HTTP, not a production deployment.
 
+### Onboarding
+
+`/signup` is a three-step flow inside the same two-column layout as the login page (mascot, logo and a friendly line on the left,
+the form card on the right; a single column on phones).
+
+1. **Create your account** (floating mascot): name, email and password. Next is blocked with inline errors until they are valid.
+2. **About you** (waving mascot): date of birth in a native date input limited to today and 120 years ago, with the age shown
+   live ("You are 36 years and 6 months old", announced politely to screen readers). Nothing medical is asked.
+3. **Welcome to Sweety** (bouncing mascot): shown after the account exists, with the first name and a "Go to my dashboard" button.
+
+The account is created once, at the end of step 2, with a single register call. If the server rejects a field from step 1 (for
+example a taken email, 409) the flow goes back to step 1 and shows the message on that field. Back keeps everything typed; the form
+state lives only in memory and the password is never stored. The login page uses the loving mascot.
+
+### Media
+
+The mascot videos, logo and favicons are generated from the original design files by a script, so they can be reproduced:
+
+```bash
+npm run media:optimize            # everything
+npm run media:optimize -- logo    # or just "mascots" or "logo"
+```
+
+It needs `ffmpeg` and `ffprobe` on your PATH. Put the originals in `design-source/` (`1.mp4` to `4.mp4` for floating, waving,
+bouncing and love, plus `logo.png`); that folder is git-ignored on purpose, so the large originals are **not committed**. The
+script writes WebM, MP4 (no audio) and a WebP poster per clip to `client/src/assets/mascot/`, the logo as 1x and 2x WebP to
+`client/src/assets/`, and the favicons to `client/public/`.
+
+- Each clip is cropped to the band of the 1080x1920 original that contains the mascot and scaled to 720 px tall.
+- The script checks whether a clip's last frame flows into its first (SSIM) and cross-fades the last 10 frames into the first
+  10 for the clips that need it (floating, waving and love). The bouncing clip already loops seamlessly. The cross-fade leaves a
+  brief, faint double image in those 0.4 seconds.
+- Near-white is snapped to pure white. The videos are drawn with `mix-blend-mode: multiply` so the white disappears into the page,
+  and multiply can only darken, so an off-white background would show as a faint box.
+- WebM output from VP9 is not bit-for-bit reproducible, so re-running the script changes those files even when nothing else did.
+- The mascot does not autoplay under `prefers-reduced-motion` (it shows the poster), pauses when the tab is hidden or the mascot
+  is off screen, and the next step's clip is preloaded.
+
 ### Accessibility and motion
 
 - A single `MotionConfig reducedMotion="user"` switches off Motion's transform animations when the OS asks for reduced
