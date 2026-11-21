@@ -21,7 +21,7 @@ export function errorHandler(error: unknown, req: Request, res: Response, _next:
     logger.error({ err: error, method: req.method, url: req.originalUrl }, 'Unhandled error');
   }
 
-  res
-    .status(appError.statusCode)
-    .json({ error: { message: appError.message, code: appError.code } });
+  res.status(appError.statusCode).json({
+    error: { message: appError.message, code: appError.code, details: appError.details },
+  });
 }
