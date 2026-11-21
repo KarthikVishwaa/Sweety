@@ -1,10 +1,14 @@
-import type { FieldValues, Path, UseFormSetError } from 'react-hook-form';
 import { ApiError } from '@/lib/api';
 
-export function applyApiError<T extends FieldValues>(
+interface FieldError {
+  type: string;
+  message: string;
+}
+
+export function applyApiError<Field extends string>(
   error: Error,
-  fields: readonly Path<T>[],
-  setError: UseFormSetError<T>,
+  fields: readonly Field[],
+  setError: (field: Field, fieldError: FieldError) => void,
 ): string | undefined {
   let mappedToField = false;
 
