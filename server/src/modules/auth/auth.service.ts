@@ -6,7 +6,7 @@ import type { LoginInput, RegisterInput } from './auth.schemas.js';
 import { signAuthToken } from './auth.tokens.js';
 import type { AuthSession, User, UserRecord } from './auth.types.js';
 
-const BCRYPT_COST = 12;
+export const BCRYPT_COST = 12;
 const UNIQUE_VIOLATION = '23505';
 const DUMMY_PASSWORD_HASH = '$2b$12$1TVgqnUqoOjKinpl/VD8.u4Xcz.EkQPqlpAqmG5N8xp6LctaXVz.i';
 
