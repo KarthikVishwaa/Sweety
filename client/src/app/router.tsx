@@ -1,22 +1,30 @@
 import { createBrowserRouter } from 'react-router-dom';
 import { GuestRoute } from '@/features/auth/GuestRoute';
 import { ProtectedRoute } from '@/features/auth/ProtectedRoute';
-import { DashboardPage } from '@/pages/DashboardPage';
-import { LoginPage } from '@/pages/LoginPage';
 import { NotFoundPage } from '@/pages/NotFoundPage';
-import { SignupPage } from '@/pages/SignupPage';
 
 export const router = createBrowserRouter([
   {
     element: <GuestRoute />,
     children: [
-      { path: '/login', element: <LoginPage /> },
-      { path: '/signup', element: <SignupPage /> },
+      {
+        path: '/login',
+        lazy: async () => ({ Component: (await import('@/pages/LoginPage')).LoginPage }),
+      },
+      {
+        path: '/signup',
+        lazy: async () => ({ Component: (await import('@/pages/SignupPage')).SignupPage }),
+      },
     ],
   },
   {
     element: <ProtectedRoute />,
-    children: [{ path: '/', element: <DashboardPage /> }],
+    children: [
+      {
+        path: '/',
+        lazy: async () => ({ Component: (await import('@/pages/DashboardPage')).DashboardPage }),
+      },
+    ],
   },
   { path: '*', element: <NotFoundPage /> },
 ]);
