@@ -16,12 +16,15 @@ export const CLIPS = [
 const CROP = { width: 1080, height: 1280, x: 0, y: 270 };
 const OUTPUT_HEIGHT = 720;
 const CROSSFADE_FRAMES = 10;
+// Compression noise leaves the "white" background a few levels short of white. `multiply` blending can only
+// darken, so that shows up as a faint box on a white page. Snap near-white luma (limited range) to white.
+const WHITE_POINT = "lutyuv=y='if(gte(val,226),235,if(gt(val,215),215+(val-215)*20/11,val))'";
 const COLOR_TAGS = ['-colorspace', 'bt709', '-color_primaries', 'bt709', '-color_trc', 'bt709'];
 
 function buildFilter({ loop, frames, fps }) {
   const base =
     `crop=${CROP.width}:${CROP.height}:${CROP.x}:${CROP.y},` +
-    `scale=-2:${OUTPUT_HEIGHT}:flags=lanczos:out_color_matrix=bt709,setsar=1`;
+    `scale=-2:${OUTPUT_HEIGHT}:flags=lanczos:out_color_matrix=bt709,setsar=1,${WHITE_POINT}`;
   if (loop === 'native') return `[0:v]${base}[v]`;
 
   const mainFrames = frames - CROSSFADE_FRAMES;

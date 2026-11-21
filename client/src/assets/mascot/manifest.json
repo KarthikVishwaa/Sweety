@@ -4,36 +4,36 @@
       "loop": "crossfade",
       "frames": 62,
       "bytes": {
-        "mp4": 144681,
-        "webm": 112561,
-        "poster": 14040
+        "mp4": 138858,
+        "webm": 111861,
+        "poster": 13478
       }
     },
     "waving": {
       "loop": "crossfade",
       "frames": 62,
       "bytes": {
-        "mp4": 131919,
-        "webm": 102105,
-        "poster": 16342
+        "mp4": 127895,
+        "webm": 101747,
+        "poster": 15726
       }
     },
     "bouncing": {
       "loop": "native",
       "frames": 72,
       "bytes": {
-        "mp4": 231423,
-        "webm": 136678,
-        "poster": 16084
+        "mp4": 226122,
+        "webm": 137018,
+        "poster": 15658
       }
     },
     "love": {
       "loop": "crossfade",
       "frames": 62,
       "bytes": {
-        "mp4": 173259,
-        "webm": 121249,
-        "poster": 18384
+        "mp4": 151985,
+        "webm": 120870,
+        "poster": 16654
       }
     }
   },

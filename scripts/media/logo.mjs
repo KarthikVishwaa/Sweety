@@ -3,6 +3,9 @@ import path from 'node:path';
 import { ffmpeg, grayPixels, probeImage } from './ffmpeg.mjs';
 
 const BACKGROUND_THRESHOLD = 235;
+// Snap near-white to white so the multiply-blended logo leaves no faint box on a white page.
+const WHITE_POINT =
+  "lutrgb=r='if(gte(val,244),255,val)':g='if(gte(val,244),255,val)':b='if(gte(val,244),255,val)'";
 const PADDING_RATIO = 0.08;
 const LOGO_WIDTHS = [
   { file: 'logo.webp', width: 240 },
@@ -69,7 +72,7 @@ export async function optimizeLogo({ sourceFile, assetsDir, publicDir }) {
     const output = path.join(assetsDir, file);
     await ffmpeg([
       ...['-i', sourceFile],
-      ...['-vf', `${cropFilter},scale=${outputWidth}:-1:flags=lanczos`],
+      ...['-vf', `${cropFilter},scale=${outputWidth}:-1:flags=lanczos,${WHITE_POINT}`],
       ...['-c:v', 'libwebp', '-quality', '92', '-compression_level', '6', output],
     ]);
     report.push({ file, 'size KB': Math.round((await stat(output)).size / 1024) });
@@ -83,7 +86,7 @@ export async function optimizeLogo({ sourceFile, assetsDir, publicDir }) {
         '-vf',
         `crop=${MARK.width}:${MARK.height}:${MARK.x}:${MARK.y},` +
           `pad=${MARK.height}:${MARK.height}:${(MARK.height - MARK.width) / 2}:0:white,` +
-          `scale=${size}:${size}:flags=lanczos`,
+          `scale=${size}:${size}:flags=lanczos,${WHITE_POINT}`,
       ],
       ...['-frames:v', '1', output],
     ]);
