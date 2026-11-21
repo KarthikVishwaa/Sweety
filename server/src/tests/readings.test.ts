@@ -197,21 +197,24 @@ describe('GET /api/readings', () => {
     const response = await agent.get(`/api/readings?date=${PAST_DATE}`);
 
     expect(response.status).toBe(200);
-    expect(response.body.readings.map((r: { slot: string }) => r.slot)).toEqual([
+    expect(response.body.data.map((r: { slot: string }) => r.slot)).toEqual([
       'morning_fasting',
       'after_lunch',
       'after_dinner',
     ]);
-    expect(response.body.readings.every((r: { date: string }) => r.date === PAST_DATE)).toBe(true);
+    expect(response.body.data.every((r: { date: string }) => r.date === PAST_DATE)).toBe(true);
   });
 
   it('returns an empty list for a date with no readings', async () => {
     const response = await agent.get('/api/readings?date=2026-01-01');
 
-    expect(response.body).toEqual({ readings: [] });
+    expect(response.body).toEqual({
+      data: [],
+      meta: { page: 1, limit: 20, total: 0, totalPages: 0 },
+    });
   });
 
-  it.each(['', '?date=2026-02-30', '?date=abc'])(
+  it.each(['?date=2026-02-30', '?date=abc', '?date='])(
     'rejects an invalid date query "%s"',
     async (query) => {
       const response = await agent.get(`/api/readings${query}`);
@@ -226,7 +229,7 @@ describe('PUT /api/readings/:id', () => {
   it('changes only the value without a false conflict, even on a full day', async () => {
     await fillDay(PAST_DATE);
     const { body } = await agent.get(`/api/readings?date=${PAST_DATE}`);
-    const lunch = body.readings.find((r: { slot: string }) => r.slot === 'after_lunch');
+    const lunch = body.data.find((r: { slot: string }) => r.slot === 'after_lunch');
 
     const response = await agent
       .put(`/api/readings/${lunch.id}`)
@@ -306,7 +309,7 @@ describe('DELETE /api/readings/:id', () => {
     const list = await agent.get(`/api/readings?date=${PAST_DATE}`);
 
     expect(response.status).toBe(204);
-    expect(list.body.readings).toEqual([]);
+    expect(list.body.data).toEqual([]);
     expect((await agent.delete(`/api/readings/${body.reading.id}`)).status).toBe(404);
   });
 });
@@ -323,7 +326,8 @@ describe('isolation between users', () => {
   it('never lists another user’s readings', async () => {
     const response = await other.get(`/api/readings?date=${PAST_DATE}`);
 
-    expect(response.body).toEqual({ readings: [] });
+    expect(response.body.data).toEqual([]);
+    expect(response.body.meta.total).toBe(0);
   });
 
   it('returns 404 when another user updates or deletes the reading', async () => {
@@ -335,8 +339,8 @@ describe('isolation between users', () => {
       expect(response.body.error.message).toBe('Reading not found.');
     }
     const own = await agent.get(`/api/readings?date=${PAST_DATE}`);
-    expect(own.body.readings).toHaveLength(1);
-    expect(own.body.readings[0].value).toBe(110);
+    expect(own.body.data).toHaveLength(1);
+    expect(own.body.data[0].value).toBe(110);
   });
 
   it('does not count another user’s readings towards the daily limit or slot', async () => {
