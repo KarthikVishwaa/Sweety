@@ -23,3 +23,8 @@ export function isRealCalendarDate(value: string): boolean {
     parsed.getUTCDate() === day
   );
 }
+
+export function addDays(date: string, days: number): string {
+  const [year = 0, month = 1, day = 1] = date.split('-').map(Number);
+  return new Date(Date.UTC(year, month - 1, day + days)).toISOString().slice(0, 10);
+}
