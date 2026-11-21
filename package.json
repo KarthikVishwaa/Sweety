@@ -42,6 +42,7 @@
     "db:down": "docker compose down",
     "db:migrate": "npm run migrate -w server -- up",
     "seed": "npm run seed -w server",
+    "media:optimize": "node scripts/optimize-media.mjs",
     "prepare": "husky"
   }
 }

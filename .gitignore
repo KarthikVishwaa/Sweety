@@ -10,3 +10,6 @@ coverage
 *.tsbuildinfo
 Thumbs.db
 Desktop.ini
+
+# Large original design files (not committed). See "Media" in the README.
+design-source/

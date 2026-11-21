@@ -1,0 +1,43 @@
+{
+  "clips": {
+    "floating": {
+      "loop": "crossfade",
+      "frames": 62,
+      "bytes": {
+        "mp4": 144681,
+        "webm": 112561,
+        "poster": 14040
+      }
+    },
+    "waving": {
+      "loop": "crossfade",
+      "frames": 62,
+      "bytes": {
+        "mp4": 131919,
+        "webm": 102105,
+        "poster": 16342
+      }
+    },
+    "bouncing": {
+      "loop": "native",
+      "frames": 72,
+      "bytes": {
+        "mp4": 231423,
+        "webm": 136678,
+        "poster": 16084
+      }
+    },
+    "love": {
+      "loop": "crossfade",
+      "frames": 62,
+      "bytes": {
+        "mp4": 173259,
+        "webm": 121249,
+        "poster": 18384
+      }
+    }
+  },
+  "width": 608,
+  "height": 720,
+  "fps": 24
+}
