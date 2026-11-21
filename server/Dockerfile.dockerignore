@@ -1,0 +1,13 @@
+.git
+.env
+.env.*
+**/node_modules
+**/dist
+**/coverage
+**/*.log
+.husky
+docs
+client/*
+!client/package.json
+server/src/tests
+server/vitest.config.ts
