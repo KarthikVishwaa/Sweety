@@ -4,12 +4,12 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Link } from 'react-router-dom';
 import { AuthLayout } from '@/components/layout/AuthLayout';
-import { applyApiError } from '@/features/auth/applyApiError';
-import { AuthField } from '@/features/auth/AuthField';
+import { applyApiError } from '@/lib/applyApiError';
+import { TextField } from '@/components/form/TextField';
 import { loginSchema, type LoginInput } from '@/features/auth/auth.schemas';
-import { FormError } from '@/features/auth/FormError';
-import { PasswordField } from '@/features/auth/PasswordField';
-import { SubmitButton } from '@/features/auth/SubmitButton';
+import { FormError } from '@/components/form/FormError';
+import { PasswordField } from '@/components/form/PasswordField';
+import { SubmitButton } from '@/components/form/SubmitButton';
 import { useLogin } from '@/features/auth/useAuth';
 import { useShakeOnError } from '@/hooks/useShakeOnError';
 import { shake as shakeVariants } from '@/lib/motion';
@@ -64,7 +64,7 @@ export function LoginPage() {
           message={serverError}
           className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive"
         />
-        <AuthField
+        <TextField
           id="email"
           label="Email"
           type="email"

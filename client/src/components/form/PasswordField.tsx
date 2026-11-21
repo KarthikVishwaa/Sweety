@@ -1,15 +1,15 @@
 import { Eye, EyeOff } from 'lucide-react';
 import { useState, type ComponentProps } from 'react';
 import { Button } from '@/components/ui/button';
-import { AuthField } from './AuthField';
+import { TextField } from './TextField';
 
-type PasswordFieldProps = Omit<ComponentProps<typeof AuthField>, 'type' | 'endAdornment'>;
+type PasswordFieldProps = Omit<ComponentProps<typeof TextField>, 'type' | 'endAdornment'>;
 
 export function PasswordField(props: PasswordFieldProps) {
   const [visible, setVisible] = useState(false);
 
   return (
-    <AuthField
+    <TextField
       {...props}
       type={visible ? 'text' : 'password'}
       endAdornment={
