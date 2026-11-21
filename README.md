@@ -62,6 +62,31 @@ npm run build        # type-check and build both workspaces
 npm run start -w server   # run the built server (after npm run build)
 ```
 
+## Authentication API
+
+Sessions use a JWT (`{ sub: userId, role }`) stored in an `httpOnly` cookie named `sweety_token` (`SameSite=Lax`,
+`Secure` in production, lifetime from `JWT_EXPIRES_IN`). Errors use `{ "error": { "message", "code", "details?" } }`;
+validation failures return `400` with `details` mapping each field to its message.
+
+| Method | Path                 | Auth | Body                        | Success                 | Failures                           |
+| ------ | -------------------- | ---- | --------------------------- | ----------------------- | ---------------------------------- |
+| POST   | `/api/auth/register` | no   | `{ name, email, password }` | `201 { user }` + cookie | `400` validation, `409` email used |
+| POST   | `/api/auth/login`    | no   | `{ email, password }`       | `200 { user }` + cookie | `400` validation, `401` bad login  |
+| POST   | `/api/auth/logout`   | no   | none                        | `204`, cookie cleared   |                                    |
+| GET    | `/api/auth/me`       | yes  | none                        | `200 { user }`          | `401` missing or invalid session   |
+
+Password rules: 8-72 characters with at least one letter and one number. Email is trimmed and lower-cased and is unique
+case-insensitively. Login returns the same `401` message for an unknown email and a wrong password, and always runs a bcrypt
+comparison so timing does not reveal which accounts exist. Login and register share the stricter rate limiter (20 requests
+per 15 minutes per IP), which is switched off when `NODE_ENV=test`.
+
+## Server tests and the test database
+
+Server tests run against a real PostgreSQL database named `sweety_test`, separate from the development `sweety` database.
+On every `npm test -w server`, `src/tests/globalSetup.ts` creates `sweety_test` if it does not exist (on the same server as
+`DATABASE_URL`) and applies all migrations to it. Each auth test starts with `TRUNCATE users`. Postgres must be running
+(`npm run db:up`). The development database is never touched.
+
 ## Environment variables
 
 | Variable         | Purpose                                          |
