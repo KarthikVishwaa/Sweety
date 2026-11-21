@@ -1,8 +1,8 @@
 import { pool } from '../../db/pool.js';
 import type { NewUser, UserRecord } from './auth.types.js';
 
-const USER_COLUMNS =
-  'id, name, email, password_hash AS "passwordHash", role, date_of_birth AS "dateOfBirth"';
+export const USER_COLUMNS = `id, name, email, password_hash AS "passwordHash", role,
+  date_of_birth AS "dateOfBirth", body_model AS "bodyModel"`;
 
 export async function findUserByEmail(email: string): Promise<UserRecord | undefined> {
   const result = await pool.query<UserRecord>(
@@ -24,11 +24,13 @@ export async function insertUser({
   email,
   passwordHash,
   dateOfBirth,
+  bodyModel,
 }: NewUser): Promise<UserRecord> {
   const result = await pool.query<UserRecord>(
-    `INSERT INTO users (name, email, password_hash, date_of_birth) VALUES ($1, $2, $3, $4)
+    `INSERT INTO users (name, email, password_hash, date_of_birth, body_model)
+     VALUES ($1, $2, $3, $4, $5)
      RETURNING ${USER_COLUMNS}`,
-    [name, email, passwordHash, dateOfBirth],
+    [name, email, passwordHash, dateOfBirth, bodyModel],
   );
   return result.rows[0] as UserRecord;
 }

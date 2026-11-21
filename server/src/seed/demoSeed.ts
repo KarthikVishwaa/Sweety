@@ -11,6 +11,7 @@ export const DEMO_USER = {
   email: 'demo@sweety.app',
   password: 'Demo@1234',
   dateOfBirth: '1968-03-14',
+  bodyModel: 'male',
 } as const;
 
 export interface SeedSummary {
@@ -36,13 +37,14 @@ export async function seedDemoData(now: Date = new Date()): Promise<SeedSummary>
   try {
     await client.query('BEGIN');
     const user = await client.query<{ id: string }>(
-      `INSERT INTO users (name, email, password_hash, role, date_of_birth)
-       VALUES ($1, $2, $3, 'patient', $4)
+      `INSERT INTO users (name, email, password_hash, role, date_of_birth, body_model)
+       VALUES ($1, $2, $3, 'patient', $4, $5)
        ON CONFLICT (lower(email))
        DO UPDATE SET name = EXCLUDED.name, password_hash = EXCLUDED.password_hash,
-                     role = 'patient', date_of_birth = EXCLUDED.date_of_birth
+                     role = 'patient', date_of_birth = EXCLUDED.date_of_birth,
+                     body_model = EXCLUDED.body_model
        RETURNING id`,
-      [DEMO_USER.name, DEMO_USER.email, passwordHash, DEMO_USER.dateOfBirth],
+      [DEMO_USER.name, DEMO_USER.email, passwordHash, DEMO_USER.dateOfBirth, DEMO_USER.bodyModel],
     );
     const userId = (user.rows[0] as { id: string }).id;
 
