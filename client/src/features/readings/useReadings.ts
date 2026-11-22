@@ -5,6 +5,7 @@ import type { ReadingInput } from './types';
 
 const READINGS_KEY = ['readings'] as const;
 const REPORTS_KEY = ['reports'] as const;
+const INSIGHTS_KEY = ['insights'] as const;
 
 export function useReadingsByDate(date: string) {
   return useQuery({
@@ -27,6 +28,7 @@ function useRefreshReadingData() {
     Promise.all([
       queryClient.invalidateQueries({ queryKey: READINGS_KEY }),
       queryClient.invalidateQueries({ queryKey: REPORTS_KEY }),
+      queryClient.invalidateQueries({ queryKey: INSIGHTS_KEY }),
     ]);
 }
 
