@@ -11,7 +11,7 @@ function torsoColumn(p: BodyProportions): Part {
   const chest = p.chestWidth / 2;
   const mix = (a: number, b: number, t: number) => a + (b - a) * t;
   // Both rounded ends are buried: the lower one between the thighs, the upper one inside the neck, so the
-  // sides run on into the legs and the neck without a seam. The upper stations draw the shoulder girdle.
+  // sides run on into the legs and the neck without a seam.
   const glute = 0.004 * p.gluteSize;
   const bottomDepth = (p.hipDepth / 2) * 0.78;
   const bottom = p.crotchY + 0.03;
@@ -47,11 +47,11 @@ function torsoColumn(p: BodyProportions): Part {
       depth: (p.chestDepth / 2) * 0.92,
       forward: -0.002,
     },
-    // The widest point of the shoulder girdle, then the trapezius line up to the neck.
+    // The ribcage narrows under the shoulder tube (which makes the shoulders themselves) and into the neck.
     {
-      at: at(line.acromionY),
-      width: line.reach,
-      depth: (p.chestDepth / 2) * 0.62,
+      at: at(line.neckBaseY - 0.03),
+      width: chest * 0.66,
+      depth: (p.chestDepth / 2) * 0.6,
       forward: -0.008,
     },
     {
