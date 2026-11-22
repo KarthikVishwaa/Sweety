@@ -1,10 +1,12 @@
 import { Canvas } from '@react-three/fiber';
 import { useRef } from 'react';
+import { ACESFilmicToneMapping, SRGBColorSpace } from 'three';
 import { BodyFigure } from './BodyFigure';
 import type { Gender } from './bodyProportions';
 import { CAMERA_FOV } from './bodyScene.constants';
 import { CameraRig } from './CameraRig';
 import { GroundShadow } from './GroundShadow';
+import { StudioEnvironment } from './StudioEnvironment';
 import { useDragRotation } from './useDragRotation';
 import { useIsActive } from './useIsActive';
 
@@ -40,12 +42,15 @@ export default function BodyGlucoseScene({
         gl={{ alpha: true, antialias: true, powerPreference: 'low-power' }}
         onCreated={({ gl }) => {
           gl.setClearColor(0x000000, 0);
+          gl.toneMapping = ACESFilmicToneMapping;
+          gl.outputColorSpace = SRGBColorSpace;
           gl.domElement.addEventListener('webglcontextlost', (event) => {
             event.preventDefault();
             onContextLost();
           });
         }}
       >
+        <StudioEnvironment />
         <CameraRig />
         <GroundShadow />
         <BodyFigure model={model} value={value} reducedMotion={reducedMotion} drag={drag} />

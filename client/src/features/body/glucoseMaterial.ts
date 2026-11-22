@@ -1,5 +1,11 @@
-import { BackSide, Color, FrontSide, MathUtils, ShaderMaterial } from 'three';
-import { fragmentShader, vertexShader } from './glucoseShader';
+import { BackSide, Color, FrontSide, MathUtils, MeshPhysicalMaterial } from 'three';
+import {
+  fragmentColour,
+  fragmentDeclarations,
+  fragmentGlow,
+  vertexDeclarations,
+  vertexWorldPosition,
+} from './glucoseShaderChunks';
 
 export interface GlucoseUniforms {
   [uniform: string]: { value: unknown };
@@ -24,23 +30,46 @@ export function createGlucoseUniforms(color: string, reducedMotion: boolean): Gl
   };
 }
 
+function createGlucoseMaterial(
+  uniforms: GlucoseUniforms,
+  side: typeof BackSide | typeof FrontSide,
+) {
+  const material = new MeshPhysicalMaterial({
+    color: 0xffffff,
+    roughness: 0.14,
+    metalness: 0,
+    clearcoat: 1,
+    clearcoatRoughness: 0.08,
+    envMapIntensity: 1,
+    transparent: true,
+    depthWrite: side === FrontSide,
+    side,
+  });
+  const backFace = { value: side === BackSide ? 1 : 0 };
+  material.onBeforeCompile = (shader) => {
+    Object.assign(shader.uniforms, uniforms, { uBackFace: backFace });
+    shader.vertexShader = shader.vertexShader
+      .replace('#include <common>', vertexDeclarations)
+      .replace('#include <begin_vertex>', vertexWorldPosition);
+    shader.fragmentShader = shader.fragmentShader
+      .replace('#include <common>', fragmentDeclarations)
+      .replace('#include <color_fragment>', fragmentColour)
+      .replace('#include <emissivemap_fragment>', fragmentGlow);
+  };
+  material.customProgramCacheKey = () => `glucose-${side}`;
+  return material;
+}
+
 // The body is drawn in two passes that share the uniforms: the inside back wall first, then the front,
 // so the liquid shows depth without any triangle-sorting artefacts.
 export function createGlucoseMaterials(uniforms: GlucoseUniforms): {
-  back: ShaderMaterial;
-  front: ShaderMaterial;
+  back: MeshPhysicalMaterial;
+  front: MeshPhysicalMaterial;
 } {
-  const create = (side: typeof BackSide | typeof FrontSide, backFace: number) =>
-    new ShaderMaterial({
-      uniforms: { ...uniforms, uBackFace: { value: backFace } },
-      vertexShader,
-      fragmentShader,
-      transparent: true,
-      depthWrite: side === FrontSide,
-      side,
-    });
-
-  return { back: create(BackSide, 1), front: create(FrontSide, 0) };
+  return {
+    back: createGlucoseMaterial(uniforms, BackSide),
+    front: createGlucoseMaterial(uniforms, FrontSide),
+  };
 }
 
 const BELOW_FEET = -0.03;

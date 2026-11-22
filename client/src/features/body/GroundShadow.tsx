@@ -28,7 +28,7 @@ export function GroundShadow() {
   return (
     <mesh rotation-x={-Math.PI / 2} position={[0, 0.001, 0]} scale={[0.8, 0.42, 1]}>
       <planeGeometry args={[1, 1]} />
-      <meshBasicMaterial map={texture} transparent depthWrite={false} />
+      <meshBasicMaterial map={texture} transparent depthWrite={false} toneMapped={false} />
     </mesh>
   );
 }
