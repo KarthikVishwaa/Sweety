@@ -13,8 +13,8 @@ import {
 } from '../../client/src/features/body/generator/meshValidation.ts';
 
 const OUTPUT = new URL('../../client/src/assets/models/', import.meta.url);
-// 14-bit positions are about 0.1 mm on a 1.78 m figure; 10-bit normals keep the shading smooth.
-const COMPRESSION = { level: 'medium', quantizePosition: 14, quantizeNormal: 10 };
+// 16-bit positions are about 0.03 mm on a 1.78 m figure, fine enough not to add angle between neighbouring faces; 10-bit normals keep the shading smooth.
+const COMPRESSION = { level: 'medium', quantizePosition: 16, quantizeNormal: 10 };
 
 function toDocument(gender, mesh) {
   const document = new Document().setLogger(new Logger(Logger.Verbosity.WARN));
@@ -71,6 +71,8 @@ async function bake(gender, io) {
     'shoulder / S': round(report.shoulderWidth),
     'waist / S': round(report.waistWidth),
     'hip / S': round(report.hipWidth),
+    'shoulder angle': round(report.shoulderCrease, 1),
+    'shoulder bumps': report.shoulderBumps,
     'GLB KB': Math.round(bytes.byteLength / 1024),
     seconds: round((performance.now() - started) / 1000, 1),
   };

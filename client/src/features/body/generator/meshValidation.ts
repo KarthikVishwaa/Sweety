@@ -1,4 +1,5 @@
 import type { BodyProportions } from '../bodyProportions.ts';
+import { shoulderCreaseDegrees, shoulderProfileBumps } from './shoulderMetrics.ts';
 
 export interface BodyMeshReport {
   triangles: number;
@@ -14,6 +15,10 @@ export interface BodyMeshReport {
   shoulderWidth: number;
   waistWidth: number;
   hipWidth: number;
+  /** Largest angle between neighbouring faces around the neck and shoulders, in degrees. */
+  shoulderCrease: number;
+  /** Times the top of the shoulder rises on its way from the neck to the arm. */
+  shoulderBumps: number;
 }
 
 const DEGENERATE_AREA = 1e-12;
@@ -24,6 +29,7 @@ const MIRROR_STRIDE = 5;
 const SYMMETRY_TOLERANCE = 0.002;
 const WIDTH_TOLERANCE = 0.015;
 const FOOT_TOLERANCE = 0.008;
+const MAX_SHOULDER_CREASE_DEGREES = 8;
 
 function edgeCounts(indices: ArrayLike<number>, vertexCount: number): Map<number, number> {
   const counts = new Map<number, number>();
@@ -200,6 +206,8 @@ export function measureBodyMesh(
     shoulderWidth: widestAt(positions, proportions.shoulderY - 0.04, proportions.shoulderY),
     waistWidth: widthAt(positions, proportions.navelY),
     hipWidth: widestAt(positions, proportions.crotchY, proportions.hipJointY + 0.01),
+    shoulderCrease: shoulderCreaseDegrees(positions, indices),
+    shoulderBumps: shoulderProfileBumps(positions),
   };
 }
 
@@ -223,6 +231,11 @@ export function bodyMeshProblems(report: BodyMeshReport, proportions: BodyPropor
     near(report.footLength, proportions.footLength, FOOT_TOLERANCE),
     `foot length ${report.footLength.toFixed(3)}, expected about ${proportions.footLength}`,
   );
+  check(
+    report.shoulderCrease <= MAX_SHOULDER_CREASE_DEGREES,
+    `${report.shoulderCrease.toFixed(1)} degrees between neighbouring faces at the shoulders, at most ${MAX_SHOULDER_CREASE_DEGREES} allowed`,
+  );
+  check(report.shoulderBumps === 0, `the top of the shoulder rises ${report.shoulderBumps} times`);
   for (const [name, measured, expected] of [
     ['shoulder', report.shoulderWidth, proportions.shoulderWidth],
     ['waist', report.waistWidth, proportions.waistWidth],
