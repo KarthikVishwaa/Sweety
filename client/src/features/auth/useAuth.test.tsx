@@ -13,6 +13,7 @@ const user = {
   email: 'ben@example.com',
   role: 'patient' as const,
   dateOfBirth: null,
+  bodyModel: 'male' as const,
 };
 
 function setup() {

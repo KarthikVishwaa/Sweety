@@ -4,7 +4,7 @@ import * as authApi from './authApi';
 import type { LoginInput, SignupInput } from './auth.schemas';
 import type { User } from './types';
 
-const ME_KEY = ['me'] as const;
+export const ME_KEY = ['me'] as const;
 
 function discardUserData(queryClient: QueryClient) {
   queryClient.removeQueries({ predicate: (query) => query.queryKey[0] !== ME_KEY[0] });

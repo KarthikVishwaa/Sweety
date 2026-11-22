@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { BODY_MODELS } from '@/features/body/bodyProportions';
 import { isRealDate, todayInIST, yearsAgo } from '@/lib/date';
 
 export const MAX_AGE_YEARS = 120;
@@ -38,10 +39,11 @@ export const signupSchema = z.object({
     .regex(/[A-Za-z]/, 'Password must contain at least one letter')
     .regex(/\d/, 'Password must contain at least one number'),
   dateOfBirth,
+  bodyModel: z.enum(BODY_MODELS, { error: 'Please choose a body model.' }),
 });
 
 export const ACCOUNT_FIELDS = ['name', 'email', 'password'] as const;
-export const SIGNUP_FIELDS = [...ACCOUNT_FIELDS, 'dateOfBirth'] as const;
+export const SIGNUP_FIELDS = [...ACCOUNT_FIELDS, 'dateOfBirth', 'bodyModel'] as const;
 
 export const loginSchema = z.object({
   email,

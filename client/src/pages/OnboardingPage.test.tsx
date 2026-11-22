@@ -16,6 +16,7 @@ const CREATED_USER = {
   email: 'asha@example.com',
   role: 'patient' as const,
   dateOfBirth: '1990-05-15',
+  bodyModel: 'female' as const,
 };
 
 function renderOnboarding() {

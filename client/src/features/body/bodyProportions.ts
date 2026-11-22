@@ -1,4 +1,5 @@
-export type BodyModel = 'male' | 'female';
+export const BODY_MODELS = ['male', 'female'] as const;
+export type BodyModel = (typeof BODY_MODELS)[number];
 
 // Every length is a fraction of the stature S unless a name says otherwise. Adult, about 7.5 heads tall.
 export interface BodyProportions {

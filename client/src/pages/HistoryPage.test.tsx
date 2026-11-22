@@ -49,6 +49,7 @@ describe('HistoryPage pagination', () => {
       email: 'asha@example.com',
       role: 'patient',
       dateOfBirth: null,
+      bodyModel: 'male' as const,
     });
     vi.mocked(readingsApi.listReadingsPage).mockImplementation(async ({ page, limit }) =>
       pageOf(page, limit),
