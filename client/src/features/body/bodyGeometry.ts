@@ -1,50 +1,30 @@
-import { BufferAttribute, BufferGeometry } from 'three';
+import type { BufferGeometry } from 'three';
+import femaleUrl from '@/assets/models/female.glb?url';
+import maleUrl from '@/assets/models/male.glb?url';
+import otherUrl from '@/assets/models/other.glb?url';
+import { parseBodyGlb } from './bodyGlb';
 import type { Gender } from './bodyProportions';
-import { generateBodyMesh } from './bodyMesh';
-import type { SurfaceMesh } from './surfaceNets';
+
+const MODEL_URLS: Record<Gender, string> = { male: maleUrl, female: femaleUrl, other: otherUrl };
 
 const geometries = new Map<Gender, Promise<BufferGeometry>>();
 
-function toGeometry(mesh: SurfaceMesh): BufferGeometry {
-  const geometry = new BufferGeometry();
-  geometry.setAttribute('position', new BufferAttribute(mesh.positions, 3));
-  geometry.setAttribute('normal', new BufferAttribute(mesh.normals, 3));
-  geometry.setIndex(new BufferAttribute(mesh.indices, 1));
-  geometry.computeBoundingSphere();
-  return geometry;
+async function load(gender: Gender): Promise<BufferGeometry> {
+  const response = await fetch(MODEL_URLS[gender]);
+  if (!response.ok) throw new Error(`Could not load the ${gender} figure (${response.status}).`);
+  return parseBodyGlb(await response.arrayBuffer());
 }
 
-// Marching the field takes a few hundred milliseconds, so it runs off the main thread where possible.
-function generateInWorker(model: Gender): Promise<SurfaceMesh> {
-  return new Promise((resolve, reject) => {
-    const worker = new Worker(new URL('./bodyGeometry.worker.ts', import.meta.url), {
-      type: 'module',
-    });
-    worker.onmessage = (event: MessageEvent<SurfaceMesh>) => {
-      worker.terminate();
-      resolve(event.data);
-    };
-    worker.onerror = (event) => {
-      worker.terminate();
-      reject(new Error(event.message));
-    };
-    worker.postMessage(model);
-  });
-}
-
-function generate(model: Gender): Promise<SurfaceMesh> {
-  return typeof Worker === 'undefined'
-    ? Promise.resolve(generateBodyMesh(model))
-    : generateInWorker(model);
-}
-
-// The only entry point to the body shape, so a modelled GLB loader can replace it later.
-export function getBodyGeometry(model: Gender): Promise<BufferGeometry> {
-  let geometry = geometries.get(model);
+/**
+ * The figure for a gender at unit height, loaded once and kept for the life of the page. The figures
+ * are baked by `npm run models:generate`; a hand-made GLB with the same name would load the same way.
+ */
+export function getBodyGeometry(gender: Gender): Promise<BufferGeometry> {
+  let geometry = geometries.get(gender);
   if (!geometry) {
-    geometry = generate(model).then(toGeometry);
-    geometry.catch(() => geometries.delete(model));
-    geometries.set(model, geometry);
+    geometry = load(gender);
+    geometry.catch(() => geometries.delete(gender));
+    geometries.set(gender, geometry);
   }
   return geometry;
 }

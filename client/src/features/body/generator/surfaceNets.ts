@@ -1,4 +1,4 @@
-import type { Sdf } from './bodySdf';
+import type { Sdf } from './sdf.ts';
 
 export interface SurfaceMesh {
   positions: Float32Array;
@@ -82,7 +82,7 @@ function sampleGrid(sdf: Sdf, grid: SurfaceGrid): Float32Array {
   return samples;
 }
 
-function gradient(
+export function gradient(
   sdf: Sdf,
   x: number,
   y: number,

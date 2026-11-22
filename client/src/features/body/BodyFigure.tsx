@@ -37,6 +37,7 @@ export function BodyFigure({ model, value, reducedMotion, drag }: BodyFigureProp
   const invalidate = useThree((state) => state.invalidate);
   const group = useRef<Group>(null);
   const [shown, setShown] = useState<Shown>();
+  const [loadError, setLoadError] = useState<Error>();
   const pending = useRef<Shown>(undefined);
   const hasShown = useRef(false);
   const sway = useRef({ weight: 1, drag: 0 });
@@ -50,16 +51,21 @@ export function BodyFigure({ model, value, reducedMotion, drag }: BodyFigureProp
 
   useEffect(() => {
     let cancelled = false;
-    void getBodyGeometry(model).then((geometry) => {
-      if (cancelled) return;
-      if (hasShown.current) {
-        pending.current = { model, geometry };
-      } else {
-        hasShown.current = true;
-        setShown({ model, geometry });
-      }
-      invalidate();
-    });
+    getBodyGeometry(model).then(
+      (geometry) => {
+        if (cancelled) return;
+        if (hasShown.current) {
+          pending.current = { model, geometry };
+        } else {
+          hasShown.current = true;
+          setShown({ model, geometry });
+        }
+        invalidate();
+      },
+      (error: Error) => {
+        if (!cancelled) setLoadError(error);
+      },
+    );
     return () => {
       cancelled = true;
     };
@@ -128,10 +134,12 @@ export function BodyFigure({ model, value, reducedMotion, drag }: BodyFigureProp
     }
   });
 
+  // A figure that will not load is handed to the error boundary, which shows the flat gauge instead.
+  if (loadError) throw loadError;
   if (!shown) return null;
 
   return (
-    <group ref={group}>
+    <group ref={group} scale={BODY_PROPORTIONS[shown.model].stature}>
       <mesh geometry={shown.geometry} material={materials.back} renderOrder={1} />
       <mesh geometry={shown.geometry} material={materials.front} renderOrder={2} />
     </group>

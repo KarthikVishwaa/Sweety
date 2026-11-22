@@ -11,6 +11,8 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
+    "@gltf-transform/core": "^4.5.1",
+    "@gltf-transform/functions": "^4.5.1",
     "concurrently": "^10.0.7",
     "eslint": "^10.15.0",
     "eslint-config-prettier": "^10.1.8",
@@ -18,6 +20,7 @@
     "globals": "^17.14.0",
     "husky": "^9.1.7",
     "lint-staged": "^17.6.1",
+    "meshoptimizer": "^1.3.0",
     "prettier": "^3.10.1",
     "typescript-eslint": "^8.73.0"
   },
@@ -43,6 +46,7 @@
     "db:migrate": "npm run migrate -w server -- up",
     "seed": "npm run seed -w server",
     "media:optimize": "node scripts/optimize-media.mjs",
-    "prepare": "husky"
+    "prepare": "husky",
+    "models:generate": "node scripts/models/generate-bodies.mjs"
   }
 }

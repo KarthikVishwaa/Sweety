@@ -4,36 +4,59 @@ export type Gender = (typeof GENDERS)[number];
 /** The figure shown to someone who has not chosen one. */
 export const NEUTRAL_GENDER: Gender = 'other';
 
-// Every length is a fraction of the stature S unless a name says otherwise. Adult, about 7.5 heads tall.
+/**
+ * One adult figure. Every length is a fraction of the stature S (approximate Drillis and Contini
+ * landmark heights), every angle is in degrees. The figures are generated at unit height and scaled
+ * to `stature` (metres) when shown.
+ */
 export interface BodyProportions {
-  /** Stature in scene units (metres). */
   stature: number;
+
+  headHeight: number;
+  chinY: number;
+  shoulderY: number;
+  chestY: number;
+  elbowY: number;
+  navelY: number;
+  wristY: number;
+  hipJointY: number;
+  crotchY: number;
+  fingertipY: number;
+  kneeY: number;
+  ankleY: number;
+
   shoulderWidth: number;
+  chestWidth: number;
   waistWidth: number;
   hipWidth: number;
   chestDepth: number;
+  waistDepth: number;
+  hipDepth: number;
   neckWidth: number;
-  crotchHeight: number;
-  /** Height of the shoulder line, the widest part of the chest, the waist and the hip bone. */
-  shoulderY: number;
-  chestY: number;
-  waistY: number;
-  hipY: number;
-  kneeY: number;
-  ankleY: number;
-  /** Head height as a fraction of S (one head in 7.5). */
-  headHeight: number;
-  /** Angle of the arms away from the torso, in degrees. */
+
+  thighWidth: number;
+  kneeWidth: number;
+  calfWidth: number;
+  ankleWidth: number;
+  upperArmWidth: number;
+  forearmWidth: number;
+  wristDepth: number;
+
+  footLength: number;
+  ballWidth: number;
+  heelWidth: number;
+  archHeight: number;
+  heelSpacing: number;
+  toeOut: number;
+  palmWidth: number;
+  thumbAngle: number;
+
   armAngle: number;
-  /** Radii of the shoulder ball, upper arm, elbow, wrist and thigh at the knee. */
-  shoulderRadius: number;
-  upperArmRadius: number;
-  elbowRadius: number;
-  wristRadius: number;
-  kneeRadius: number;
-  /** Size of the gluteal curve and the chest contour (0 is none). */
+  elbowBend: number;
+
+  /** Size of the gluteal curve (1 is typical) and of the chest contour (0 is a flat male chest). */
   gluteSize: number;
-  bust: number;
+  chestContour: number;
 }
 
 const MALE_STATURE = 1.78;
@@ -41,55 +64,103 @@ const FEMALE_TO_MALE_STATURE = 0.93;
 
 const MALE: BodyProportions = {
   stature: MALE_STATURE,
-  shoulderWidth: 0.26,
-  waistWidth: 0.18,
-  hipWidth: 0.19,
-  chestDepth: 0.12,
-  neckWidth: 0.055,
-  crotchHeight: 0.47,
-  shoulderY: 0.815,
-  chestY: 0.725,
-  waistY: 0.6,
-  hipY: 0.53,
+
+  headHeight: 0.13,
+  chinY: 0.87,
+  shoulderY: 0.818,
+  chestY: 0.72,
+  elbowY: 0.63,
+  navelY: 0.6,
+  wristY: 0.485,
+  hipJointY: 0.53,
+  crotchY: 0.47,
+  fingertipY: 0.377,
   kneeY: 0.285,
-  ankleY: 0.045,
-  headHeight: 1 / 7.5,
+  ankleY: 0.039,
+
+  shoulderWidth: 0.259,
+  chestWidth: 0.186,
+  waistWidth: 0.18,
+  hipWidth: 0.191,
+  chestDepth: 0.12,
+  waistDepth: 0.106,
+  hipDepth: 0.118,
+  neckWidth: 0.058,
+
+  thighWidth: 0.1,
+  kneeWidth: 0.07,
+  calfWidth: 0.072,
+  ankleWidth: 0.04,
+  upperArmWidth: 0.062,
+  forearmWidth: 0.053,
+  wristDepth: 0.034,
+
+  footLength: 0.152,
+  ballWidth: 0.058,
+  heelWidth: 0.038,
+  archHeight: 0.009,
+  heelSpacing: 0.1,
+  toeOut: 10,
+  palmWidth: 0.046,
+  thumbAngle: 30,
+
   armAngle: 13,
-  shoulderRadius: 0.038,
-  upperArmRadius: 0.036,
-  elbowRadius: 0.029,
-  wristRadius: 0.019,
-  kneeRadius: 0.04,
+  elbowBend: 8,
+
   gluteSize: 1,
-  bust: 0,
+  chestContour: 0,
 };
 
 const FEMALE: BodyProportions = {
   stature: MALE_STATURE * FEMALE_TO_MALE_STATURE,
+
+  headHeight: 0.13,
+  chinY: 0.87,
+  shoulderY: 0.818,
+  chestY: 0.715,
+  elbowY: 0.63,
+  navelY: 0.6,
+  wristY: 0.485,
+  hipJointY: 0.53,
+  crotchY: 0.466,
+  fingertipY: 0.377,
+  kneeY: 0.285,
+  ankleY: 0.039,
+
   shoulderWidth: 0.235,
+  chestWidth: 0.165,
   waistWidth: 0.155,
   hipWidth: 0.215,
   chestDepth: 0.11,
-  neckWidth: 0.045,
-  crotchHeight: 0.45,
-  shoulderY: 0.815,
-  chestY: 0.725,
-  waistY: 0.625,
-  hipY: 0.525,
-  kneeY: 0.285,
-  ankleY: 0.045,
-  headHeight: 1 / 7.5,
-  armAngle: 13,
-  shoulderRadius: 0.034,
-  upperArmRadius: 0.031,
-  elbowRadius: 0.025,
-  wristRadius: 0.016,
-  kneeRadius: 0.037,
+  waistDepth: 0.094,
+  hipDepth: 0.124,
+  neckWidth: 0.05,
+
+  thighWidth: 0.106,
+  kneeWidth: 0.066,
+  calfWidth: 0.069,
+  ankleWidth: 0.037,
+  upperArmWidth: 0.055,
+  forearmWidth: 0.046,
+  wristDepth: 0.03,
+
+  footLength: 0.148,
+  ballWidth: 0.054,
+  heelWidth: 0.035,
+  archHeight: 0.009,
+  heelSpacing: 0.095,
+  toeOut: 10,
+  palmWidth: 0.042,
+  thumbAngle: 30,
+
+  armAngle: 14,
+  elbowBend: 8,
+
   gluteSize: 1.15,
-  bust: 1,
+  chestContour: 1,
 };
 
-// The neutral figure sits halfway between the two, measurement by measurement.
+// The neutral figure sits exactly halfway between the two, measurement by measurement.
 function average(first: BodyProportions, second: BodyProportions): BodyProportions {
   const entries = Object.keys(first).map((key) => {
     const name = key as keyof BodyProportions;
@@ -103,5 +174,3 @@ export const BODY_PROPORTIONS: Record<Gender, BodyProportions> = {
   female: FEMALE,
   other: average(MALE, FEMALE),
 };
-
-export const MESH_TRIANGLE_BUDGET = 60_000;
