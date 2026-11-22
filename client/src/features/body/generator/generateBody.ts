@@ -1,6 +1,9 @@
 import type { Gender } from '../bodyProportions.ts';
 import { createBodySdf } from './bodySdf.ts';
 import type { Sdf } from './sdf.ts';
+import { relaxOntoSurface } from './relaxation.ts';
+import { shoulderWeights } from './shoulderMask.ts';
+import { mirrorPairs, restoreSymmetry } from './symmetry.ts';
 import { extractSurface, gradient } from './surfaceNets.ts';
 import { taubinSmooth } from './taubin.ts';
 
@@ -13,6 +16,8 @@ export interface BodyMesh {
 /** Edge of a voxel, as a fraction of the stature. */
 export const VOXEL = 0.0038;
 const SMOOTHING_ITERATIONS = 3;
+/** Extra relaxation of the neck, shoulders and armpits only, which evens out the triangles the voxel grid leaves there. */
+const SHOULDER_RELAXATION_ITERATIONS = 12;
 const HALF_WIDTH = 0.25;
 const TOP = 1.012;
 const BACK = -0.1;
@@ -63,6 +68,16 @@ export function generateBodyMesh(gender: Gender): BodyMesh {
     voxel: VOXEL,
   });
   taubinSmooth(surface.positions, surface.indices, SMOOTHING_ITERATIONS);
+  const pairs = mirrorPairs(surface.positions);
+  relaxOntoSurface(
+    surface.positions,
+    surface.indices,
+    sdf,
+    shoulderWeights(surface.positions),
+    SHOULDER_RELAXATION_ITERATIONS,
+    VOXEL * 0.5,
+  );
+  restoreSymmetry(surface.positions, pairs);
   const normals = normalsFromField(sdf, surface.positions);
   standAtUnitHeight(surface.positions);
   return { positions: surface.positions, normals, indices: surface.indices };

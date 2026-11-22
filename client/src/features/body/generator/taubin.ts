@@ -1,7 +1,7 @@
 const SHRINK = 0.5;
 const INFLATE = -0.53;
 
-function neighbours(vertexCount: number, indices: Uint32Array): number[][] {
+export function neighbours(vertexCount: number, indices: Uint32Array): number[][] {
   const lists: number[][] = Array.from({ length: vertexCount }, () => []);
   const link = (a: number, b: number) => {
     if (!lists[a]!.includes(b)) lists[a]!.push(b);
