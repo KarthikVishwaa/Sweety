@@ -12,10 +12,13 @@ export interface User {
   dateOfBirth: string | null;
   /** Null until the person chooses one (accounts made before gender existed). */
   gender: Gender | null;
+  /** When the account was made, as an ISO timestamp. */
+  createdAt: string;
 }
 
-export interface UserRecord extends User {
+export interface UserRecord extends Omit<User, 'createdAt'> {
   passwordHash: string;
+  createdAt: Date;
 }
 
 export interface NewUser {

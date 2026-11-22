@@ -2,7 +2,7 @@ import { pool } from '../../db/pool.js';
 import type { NewUser, UserRecord } from './auth.types.js';
 
 export const USER_COLUMNS = `id, name, email, password_hash AS "passwordHash", role,
-  date_of_birth AS "dateOfBirth", gender AS "gender"`;
+  date_of_birth AS "dateOfBirth", gender AS "gender", created_at AS "createdAt"`;
 
 export async function findUserByEmail(email: string): Promise<UserRecord | undefined> {
   const result = await pool.query<UserRecord>(

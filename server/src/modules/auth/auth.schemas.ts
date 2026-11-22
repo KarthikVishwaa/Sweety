@@ -12,7 +12,7 @@ const DATE_OF_BIRTH_MESSAGES = {
 
 export const gender = z.enum(GENDERS, { error: 'Please choose a gender.' });
 
-const dateOfBirth = z
+export const dateOfBirth = z
   .string({ error: DATE_OF_BIRTH_MESSAGES.required })
   .trim()
   .min(1, DATE_OF_BIRTH_MESSAGES.required)
@@ -31,12 +31,14 @@ const email = z
   .toLowerCase()
   .pipe(z.email('Enter a valid email address'));
 
+export const name = z
+  .string({ error: 'Name is required' })
+  .trim()
+  .min(2, 'Name must be at least 2 characters')
+  .max(60, 'Name must be at most 60 characters');
+
 export const registerSchema = z.object({
-  name: z
-    .string({ error: 'Name is required' })
-    .trim()
-    .min(2, 'Name must be at least 2 characters')
-    .max(60, 'Name must be at most 60 characters'),
+  name,
   email,
   password: z
     .string({ error: 'Password is required' })

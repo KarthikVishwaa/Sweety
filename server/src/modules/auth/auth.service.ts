@@ -10,8 +10,16 @@ export const BCRYPT_COST = 12;
 const UNIQUE_VIOLATION = '23505';
 const DUMMY_PASSWORD_HASH = '$2b$12$1TVgqnUqoOjKinpl/VD8.u4Xcz.EkQPqlpAqmG5N8xp6LctaXVz.i';
 
-export function toUser({ id, name, email, role, dateOfBirth, gender }: UserRecord): User {
-  return { id, name, email, role, dateOfBirth, gender };
+export function toUser({
+  id,
+  name,
+  email,
+  role,
+  dateOfBirth,
+  gender,
+  createdAt,
+}: UserRecord): User {
+  return { id, name, email, role, dateOfBirth, gender, createdAt: createdAt.toISOString() };
 }
 
 function startSession(record: UserRecord): AuthSession {
