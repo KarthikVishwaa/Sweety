@@ -1,11 +1,10 @@
 import { useState } from 'react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, useNavigate } from 'react-router-dom';
 import { LogoutDialog } from '@/components/layout/LogoutDialog';
 import { Logo } from '@/components/layout/Logo';
 import { UserMenu } from '@/components/layout/UserMenu';
 import { buttonVariants } from '@/components/ui/button';
 import { useMe } from '@/features/auth/useAuth';
-import { ProfileDialog } from '@/features/profile/ProfileDialog';
 import { cn } from '@/lib/utils';
 
 const NAV_ITEMS = [
@@ -15,7 +14,7 @@ const NAV_ITEMS = [
 
 export function AppHeader({ heading }: { heading: string }) {
   const { data: user } = useMe();
-  const [profileOpen, setProfileOpen] = useState(false);
+  const navigate = useNavigate();
   const [logoutOpen, setLogoutOpen] = useState(false);
 
   return (
@@ -40,12 +39,11 @@ export function AppHeader({ heading }: { heading: string }) {
         {user && (
           <UserMenu
             name={user.name}
-            onProfile={() => setProfileOpen(true)}
+            onProfile={() => navigate('/profile')}
             onLogout={() => setLogoutOpen(true)}
           />
         )}
       </nav>
-      <ProfileDialog open={profileOpen} onOpenChange={setProfileOpen} />
       <LogoutDialog open={logoutOpen} onOpenChange={setLogoutOpen} />
     </header>
   );
