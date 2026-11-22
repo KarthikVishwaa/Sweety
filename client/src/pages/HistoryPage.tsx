@@ -1,5 +1,6 @@
 import { useEffect } from 'react';
 import { AppHeader } from '@/components/layout/AppHeader';
+import { AppShell } from '@/components/layout/AppShell';
 import { PaginationControls } from '@/components/layout/PaginationControls';
 import { HistoryCards } from '@/features/readings/components/HistoryCards';
 import { HistoryEmpty } from '@/features/readings/components/HistoryEmpty';
@@ -28,7 +29,7 @@ export function HistoryPage() {
   }, [isPlaceholderData, lastPage, page, setPage]);
 
   return (
-    <div className="mx-auto max-w-4xl space-y-6 p-4 sm:p-6">
+    <AppShell>
       <AppHeader heading="Reading history" />
       <main className="space-y-4">
         {isPending && <HistorySkeleton rows={limit} />}
@@ -62,6 +63,6 @@ export function HistoryPage() {
         )}
       </main>
       <ReadingDialogs dialogs={dialogs} defaultDate={todayInIST()} />
-    </div>
+    </AppShell>
   );
 }

@@ -15,7 +15,11 @@ export function StepHeading({ description, focusOnMount, children }: StepHeading
 
   return (
     <div className="space-y-1">
-      <h2 ref={headingRef} tabIndex={-1} className="text-xl font-semibold outline-none">
+      <h2
+        ref={headingRef}
+        tabIndex={-1}
+        className="text-xl font-semibold outline-none lg:text-2xl xl:text-3xl"
+      >
         {children}
       </h2>
       {description && <p className="text-sm text-muted-foreground">{description}</p>}

@@ -58,7 +58,7 @@ export function GenderStep({
               <label
                 key={model}
                 className={cn(
-                  'relative flex min-h-20 cursor-pointer items-center justify-center rounded-xl border-2 bg-card p-4 text-base font-medium transition-colors',
+                  'relative flex min-h-20 lg:min-h-28 cursor-pointer items-center justify-center rounded-xl border-2 bg-card p-4 text-base font-medium transition-colors lg:text-lg',
                   'hover:border-teal-300 has-[:checked]:border-primary has-[:checked]:bg-teal-50',
                   'has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-ring has-[:focus-visible]:ring-offset-2',
                   pending && 'pointer-events-none opacity-60',

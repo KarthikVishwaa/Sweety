@@ -1,4 +1,5 @@
 import { AppHeader } from '@/components/layout/AppHeader';
+import { AppShell } from '@/components/layout/AppShell';
 import { useMe } from '@/features/auth/useAuth';
 import { BodyPanel } from '@/features/body/BodyPanel';
 import { DateNavigator } from '@/features/readings/components/DateNavigator';
@@ -14,9 +15,9 @@ export function DashboardPage() {
   const dialogs = useReadingDialogs();
 
   return (
-    <div className="mx-auto max-w-6xl xl:max-w-7xl space-y-6 p-4 sm:p-6">
+    <AppShell>
       <AppHeader heading={`Hello, ${user?.name}`} />
-      <div className="grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-[22rem_minmax(0,1fr)] xl:grid-cols-[28rem_minmax(0,1fr)] lg:items-start">
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-[minmax(0,2fr)_minmax(0,3fr)] lg:items-start">
         <aside className="lg:sticky lg:top-6">
           <BodyPanel date={date} />
         </aside>
@@ -34,6 +35,6 @@ export function DashboardPage() {
         </main>
       </div>
       <ReadingDialogs dialogs={dialogs} defaultDate={date} />
-    </div>
+    </AppShell>
   );
 }

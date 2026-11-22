@@ -18,19 +18,19 @@ export function HistoryTable({ readings, onEdit, onDelete }: HistoryListProps) {
       <caption className="sr-only">Reading history, newest first</caption>
       <thead>
         <tr className="border-b text-left text-muted-foreground">
-          <th scope="col" className="px-3 py-2 font-medium">
+          <th scope="col" className="px-3 py-2 lg:px-4 lg:py-3 font-medium">
             Date
           </th>
-          <th scope="col" className="px-3 py-2 font-medium">
+          <th scope="col" className="px-3 py-2 lg:px-4 lg:py-3 font-medium">
             Time slot
           </th>
-          <th scope="col" className="px-3 py-2 font-medium">
+          <th scope="col" className="px-3 py-2 lg:px-4 lg:py-3 font-medium">
             Value
           </th>
-          <th scope="col" className="px-3 py-2 font-medium">
+          <th scope="col" className="px-3 py-2 lg:px-4 lg:py-3 font-medium">
             Status
           </th>
-          <th scope="col" className="px-3 py-2 text-right font-medium">
+          <th scope="col" className="px-3 py-2 lg:px-4 lg:py-3 text-right font-medium">
             Actions
           </th>
         </tr>
@@ -38,13 +38,13 @@ export function HistoryTable({ readings, onEdit, onDelete }: HistoryListProps) {
       <tbody ref={bodyRef}>
         {readings.map((reading) => (
           <tr key={reading.id} className="border-b last:border-b-0">
-            <td className="px-3 py-2">{formatDisplayDate(reading.date)}</td>
-            <td className="px-3 py-2">{reading.slotLabel}</td>
-            <td className="px-3 py-2 tabular-nums">
+            <td className="px-3 py-2 lg:px-4 lg:py-3">{formatDisplayDate(reading.date)}</td>
+            <td className="px-3 py-2 lg:px-4 lg:py-3">{reading.slotLabel}</td>
+            <td className="px-3 py-2 lg:px-4 lg:py-3 tabular-nums">
               <span className="font-semibold">{reading.value}</span>{' '}
               <span className="text-xs text-muted-foreground">mg/dl</span>
             </td>
-            <td className="px-3 py-2">
+            <td className="px-3 py-2 lg:px-4 lg:py-3">
               <GlucoseBadge value={reading.value} />
             </td>
             <td className="px-3 py-1">

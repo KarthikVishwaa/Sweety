@@ -16,7 +16,7 @@ export function OnboardingProgress({ step }: { step: ProgressStep }) {
         Step {step} of {STEPS.length}
         <span className="sm:hidden">: {label}</span>
       </p>
-      <ol aria-label="Sign-up steps" className="hidden gap-4 text-sm sm:flex">
+      <ol aria-label="Sign-up steps" className="hidden gap-4 text-sm sm:flex lg:text-base">
         {STEPS.map((name, index) => (
           <li
             key={name}

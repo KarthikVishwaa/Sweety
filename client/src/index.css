@@ -126,6 +126,9 @@
   }
   html {
     @apply font-sans;
+    /* 16px up to about 1280px wide, then growing with the screen (about 18.7px at 1920, 21px at 2560),
+       so every rem-based size grows with it. Phones and tablets keep 16px. */
+    font-size: clamp(16px, 0.4vw + 11px, 22px);
   }
 }
 
