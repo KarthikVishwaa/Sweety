@@ -37,7 +37,7 @@ export function AuthLayout({
       </aside>
       <main className="flex items-start justify-center px-4 py-6 lg:items-center lg:p-12">
         <motion.div
-          className="w-full max-w-sm space-y-4 lg:max-w-2xl"
+          className="w-full max-w-sm space-y-4 lg:max-w-2xl 3xl:max-w-3xl"
           variants={fadeUp}
           initial="hidden"
           animate="visible"

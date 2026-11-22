@@ -10,7 +10,7 @@ export function WelcomeStep({ firstName }: { firstName: string }) {
 
   return (
     <motion.div
-      className="space-y-5"
+      className="space-y-5 lg:space-y-8 lg:[&_button]:h-14! lg:[&_button]:text-lg! lg:[&_h2]:text-3xl lg:[&_p]:text-lg lg:[&_p]:leading-relaxed"
       variants={reducedMotion ? fadeIn : popIn}
       initial="hidden"
       animate="visible"
