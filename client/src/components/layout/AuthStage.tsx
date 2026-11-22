@@ -2,12 +2,12 @@ import { AnimatePresence, motion, useReducedMotion } from 'motion/react';
 import { AnimatedMascot } from '@/components/mascot/AnimatedMascot';
 import type { MascotVariant } from '@/components/mascot/mascot.assets';
 import { BodyGlucoseGauge } from '@/features/body/BodyGlucoseGauge';
-import type { BodyModel } from '@/features/body/bodyProportions';
+import type { Gender } from '@/features/body/bodyProportions';
 import { stageFade, stageSwap } from '@/lib/motion';
 
 export type StageContent =
   | { kind: 'mascot'; variant: MascotVariant }
-  | { kind: 'body'; model: BodyModel; value: number | null };
+  | { kind: 'body'; model: Gender; value: number | null };
 
 // A fixed size at every breakpoint, so swapping a video for the 3D figure never moves the page.
 export function AuthStage({ content }: { content: StageContent }) {

@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import { getBodyGeometry } from './bodyGeometry';
 import { generateBodyMesh } from './bodyMesh';
-import { BODY_PROPORTIONS, MESH_TRIANGLE_BUDGET, type BodyModel } from './bodyProportions';
+import { BODY_PROPORTIONS, MESH_TRIANGLE_BUDGET, type Gender } from './bodyProportions';
 
-const MODELS: BodyModel[] = ['male', 'female'];
+const MODELS: Gender[] = ['male', 'female', 'other'];
 const SYMMETRY_TOLERANCE = 0.01;
 
 describe.each(MODELS)('%s body mesh', (model) => {

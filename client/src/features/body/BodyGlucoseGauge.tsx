@@ -3,14 +3,14 @@ import { Suspense, lazy, useState } from 'react';
 import { cn } from '@/lib/utils';
 import { BodyGaugeBoundary } from './BodyGaugeBoundary';
 import { BodyGaugeFallback } from './BodyGaugeFallback';
-import type { BodyModel } from './bodyProportions';
+import type { Gender } from './bodyProportions';
 import { useWebGLSupport } from './useWebGLSupport';
 
 // three.js is only downloaded when a figure is actually shown.
 const BodyGlucoseScene = lazy(() => import('./BodyGlucoseScene'));
 
 interface BodyGlucoseGaugeProps {
-  model: BodyModel;
+  model: Gender;
   value: number | null;
   className?: string;
 }

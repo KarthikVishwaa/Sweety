@@ -1,7 +1,7 @@
 import { Canvas } from '@react-three/fiber';
 import { useRef } from 'react';
 import { BodyFigure } from './BodyFigure';
-import type { BodyModel } from './bodyProportions';
+import type { Gender } from './bodyProportions';
 import { CAMERA_FOV } from './bodyScene.constants';
 import { CameraRig } from './CameraRig';
 import { GroundShadow } from './GroundShadow';
@@ -9,7 +9,7 @@ import { useDragRotation } from './useDragRotation';
 import { useIsActive } from './useIsActive';
 
 interface BodyGlucoseSceneProps {
-  model: BodyModel;
+  model: Gender;
   value: number | null;
   reducedMotion: boolean;
   onContextLost: () => void;

@@ -16,8 +16,16 @@ describe('body proportions', () => {
     );
   });
 
+  it('puts the neutral figure halfway between the two on every measurement', () => {
+    const { other } = BODY_PROPORTIONS;
+    for (const key of Object.keys(male) as (keyof typeof male)[]) {
+      expect(other[key]).toBeCloseTo((male[key] + female[key]) / 2, 10);
+    }
+  });
+
   it('is about seven and a half heads tall for both models', () => {
     expect(male.headHeight).toBeCloseTo(1 / 7.5, 5);
     expect(female.headHeight).toBeCloseTo(1 / 7.5, 5);
+    expect(BODY_PROPORTIONS.other.headHeight).toBeCloseTo(1 / 7.5, 5);
   });
 });

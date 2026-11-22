@@ -1,4 +1,4 @@
-import { BODY_PROPORTIONS, type BodyModel, type BodyProportions } from './bodyProportions';
+import { BODY_PROPORTIONS, type Gender, type BodyProportions } from './bodyProportions';
 
 type Vec3 = readonly [number, number, number];
 type Sdf = (x: number, y: number, z: number) => number;
@@ -328,7 +328,7 @@ function bodyParts(p: BodyProportions): Part[] {
   return parts;
 }
 
-export function createBodySdf(model: BodyModel): Sdf {
+export function createBodySdf(model: Gender): Sdf {
   const parts = bodyParts(BODY_PROPORTIONS[model]);
 
   return (x, y, z) => {

@@ -7,12 +7,12 @@ import * as authApi from '@/features/auth/authApi';
 import type { User } from '@/features/auth/types';
 import * as readingsApi from '@/features/readings/readingsApi';
 import type { Reading, ReadingSlot } from '@/features/readings/types';
-import * as bodyModelApi from './bodyModelApi';
+import * as genderApi from './genderApi';
 import { BodyPanel } from './BodyPanel';
 
 vi.mock('@/features/auth/authApi');
 vi.mock('@/features/readings/readingsApi');
-vi.mock('./bodyModelApi');
+vi.mock('./genderApi');
 vi.mock('sonner', () => ({ toast: { success: vi.fn(), error: vi.fn() } }));
 vi.mock('./BodyGlucoseGauge', () => ({
   BodyGlucoseGauge: ({ model, value }: { model: string; value: number | null }) => (
@@ -26,7 +26,7 @@ const USER: User = {
   email: 'asha@example.com',
   role: 'patient',
   dateOfBirth: null,
-  bodyModel: 'male',
+  gender: 'male',
 };
 
 function reading(slot: ReadingSlot, value: number): Reading {
@@ -93,20 +93,31 @@ describe('BodyPanel', () => {
   });
 
   it('switches the figure at once and saves the choice', async () => {
-    vi.mocked(bodyModelApi.updateBodyModel).mockResolvedValue({ ...USER, bodyModel: 'female' });
+    vi.mocked(genderApi.updateGender).mockResolvedValue({ ...USER, gender: 'female' });
     renderPanel();
     await screen.findByText('Add your first reading for this day');
 
     await userEvent.click(screen.getByRole('radio', { name: 'Female' }));
 
     expect(screen.getByTestId('gauge')).toHaveTextContent('female:empty');
-    expect(bodyModelApi.updateBodyModel).toHaveBeenCalledWith('female');
+    expect(genderApi.updateGender).toHaveBeenCalledWith('female');
     await waitFor(() => expect(toast.success).toHaveBeenCalled());
     expect(screen.getByRole('radio', { name: 'Female' })).toBeChecked();
   });
 
+  it('can switch to other', async () => {
+    vi.mocked(genderApi.updateGender).mockResolvedValue({ ...USER, gender: 'other' });
+    renderPanel();
+    await screen.findByText('Add your first reading for this day');
+
+    await userEvent.click(screen.getByRole('radio', { name: 'Other' }));
+
+    expect(screen.getByTestId('gauge')).toHaveTextContent('other:empty');
+    expect(genderApi.updateGender).toHaveBeenCalledWith('other');
+  });
+
   it('puts the figure back and tells the person when saving fails', async () => {
-    vi.mocked(bodyModelApi.updateBodyModel).mockRejectedValue(new Error('Network'));
+    vi.mocked(genderApi.updateGender).mockRejectedValue(new Error('Network'));
     renderPanel();
     await screen.findByText('Add your first reading for this day');
 

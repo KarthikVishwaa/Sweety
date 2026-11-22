@@ -16,7 +16,7 @@ const CREATED_USER = {
   email: 'asha@example.com',
   role: 'patient' as const,
   dateOfBirth: '1990-05-15',
-  bodyModel: 'female' as const,
+  gender: 'female' as const,
 };
 
 function renderOnboarding() {
@@ -48,14 +48,14 @@ const ageText = () => document.querySelector('[aria-live="polite"]')?.textConten
 const continueFromAbout = () => userEvent.click(screen.getByRole('button', { name: 'Continue' }));
 const createAccount = () =>
   userEvent.click(screen.getByRole('button', { name: 'Create my account' }));
-const chooseBodyModel = (name: 'Male' | 'Female') =>
+const chooseGender = (name: 'Male' | 'Female' | 'Other') =>
   userEvent.click(screen.getByRole('radio', { name }));
 
 async function completeAboutStep(dateOfBirth = '1990-05-15') {
   await completeAccountStep();
   setDateOfBirth(dateOfBirth);
   await continueFromAbout();
-  await screen.findByRole('heading', { name: 'Choose your body model' });
+  await screen.findByRole('heading', { name: 'Choose your gender' });
 }
 
 describe('onboarding', () => {
@@ -201,7 +201,7 @@ describe('onboarding', () => {
       expect(authApi.register).not.toHaveBeenCalled();
     });
 
-    it('does not create the account yet, and moves on to the body model', async () => {
+    it('does not create the account yet, and moves on to the gender step', async () => {
       renderOnboarding();
       await completeAboutStep();
 
@@ -210,7 +210,7 @@ describe('onboarding', () => {
     });
   });
 
-  describe('step 3: body model', () => {
+  describe('step 3: gender', () => {
     it('starts with nothing chosen and the button disabled, with a reason', async () => {
       renderOnboarding();
       await completeAboutStep();
@@ -219,7 +219,7 @@ describe('onboarding', () => {
       expect(screen.getByRole('radio', { name: 'Female' })).not.toBeChecked();
       const button = screen.getByRole('button', { name: 'Create my account' });
       expect(button).toBeDisabled();
-      expect(button).toHaveAccessibleDescription('Choose Male or Female to create your account.');
+      expect(button).toHaveAccessibleDescription('Choose a gender to create your account.');
       expect(screen.getByText(/only changes the figure you see/)).toBeInTheDocument();
     });
 
@@ -227,13 +227,29 @@ describe('onboarding', () => {
       renderOnboarding();
       await completeAboutStep();
 
-      await chooseBodyModel('Male');
+      await chooseGender('Male');
       expect(screen.getByRole('radio', { name: 'Male' })).toBeChecked();
       expect(screen.getByRole('button', { name: 'Create my account' })).toBeEnabled();
 
-      await chooseBodyModel('Female');
+      await chooseGender('Female');
       expect(screen.getByRole('radio', { name: 'Female' })).toBeChecked();
       expect(screen.getByRole('radio', { name: 'Male' })).not.toBeChecked();
+    });
+
+    it('offers Male, Female and Other, and registers Other when chosen', async () => {
+      renderOnboarding();
+      await completeAboutStep();
+      expect(screen.getAllByRole('radio').map((radio) => radio.getAttribute('value'))).toEqual([
+        'male',
+        'female',
+        'other',
+      ]);
+
+      await chooseGender('Other');
+      await createAccount();
+
+      await waitFor(() => expect(authApi.register).toHaveBeenCalledOnce());
+      expect(authApi.register).toHaveBeenCalledWith(expect.objectContaining({ gender: 'other' }));
     });
 
     it('moves between the cards with the arrow keys', async () => {
@@ -251,20 +267,20 @@ describe('onboarding', () => {
     it('keeps the choice when going Back and forward again', async () => {
       renderOnboarding();
       await completeAboutStep();
-      await chooseBodyModel('Female');
+      await chooseGender('Female');
 
       await userEvent.click(screen.getByRole('button', { name: 'Back' }));
       await screen.findByRole('heading', { name: 'A little about you' });
       await continueFromAbout();
-      await screen.findByRole('heading', { name: 'Choose your body model' });
+      await screen.findByRole('heading', { name: 'Choose your gender' });
 
       expect(screen.getByRole('radio', { name: 'Female' })).toBeChecked();
     });
 
-    it('registers once with name, email, password, date of birth and body model', async () => {
+    it('registers once with name, email, password, date of birth and gender', async () => {
       renderOnboarding();
       await completeAboutStep();
-      await chooseBodyModel('Female');
+      await chooseGender('Female');
 
       await createAccount();
 
@@ -274,7 +290,7 @@ describe('onboarding', () => {
         email: 'asha@example.com',
         password: 'sweet1234',
         dateOfBirth: '1990-05-15',
-        bodyModel: 'female',
+        gender: 'female',
       });
     });
 
@@ -282,7 +298,7 @@ describe('onboarding', () => {
       vi.mocked(authApi.register).mockReturnValue(new Promise(() => undefined));
       renderOnboarding();
       await completeAboutStep();
-      await chooseBodyModel('Male');
+      await chooseGender('Male');
 
       await createAccount();
 
@@ -298,7 +314,7 @@ describe('onboarding', () => {
       vi.mocked(authApi.register).mockRejectedValue(new ApiError(message, 409, { email: message }));
       renderOnboarding();
       await completeAboutStep();
-      await chooseBodyModel('Male');
+      await chooseGender('Male');
 
       await createAccount();
 
@@ -316,7 +332,7 @@ describe('onboarding', () => {
       );
       renderOnboarding();
       await completeAboutStep();
-      await chooseBodyModel('Male');
+      await chooseGender('Male');
 
       await createAccount();
 
@@ -328,18 +344,18 @@ describe('onboarding', () => {
       vi.mocked(authApi.register).mockRejectedValue(new ApiError('Something went wrong.', 500));
       renderOnboarding();
       await completeAboutStep();
-      await chooseBodyModel('Male');
+      await chooseGender('Male');
 
       await createAccount();
 
       expect(await screen.findByRole('alert')).toHaveTextContent('Something went wrong.');
-      expect(screen.getByRole('heading', { name: 'Choose your body model' })).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: 'Choose your gender' })).toBeInTheDocument();
     });
 
     it('celebrates on success with the first name, no progress bar, and a dashboard button', async () => {
       renderOnboarding();
       await completeAboutStep();
-      await chooseBodyModel('Male');
+      await chooseGender('Male');
 
       await createAccount();
 

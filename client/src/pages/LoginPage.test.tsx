@@ -43,7 +43,7 @@ describe('LoginPage', () => {
       email: 'asha@example.com',
       role: 'patient',
       dateOfBirth: null,
-      bodyModel: 'male' as const,
+      gender: 'male' as const,
     });
     renderLoginPage();
 

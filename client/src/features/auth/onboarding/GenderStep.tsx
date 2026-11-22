@@ -5,15 +5,15 @@ import { FormError } from '@/components/form/FormError';
 import { SubmitButton } from '@/components/form/SubmitButton';
 import { StaggerGroup, StaggerItem } from '@/components/motion/Stagger';
 import { Button } from '@/components/ui/button';
-import { BODY_MODELS } from '@/features/body/bodyProportions';
+import { GENDERS } from '@/features/body/bodyProportions';
 import { cn } from '@/lib/utils';
 import type { SignupInput } from '../auth.schemas';
 import { StepHeading } from './StepHeading';
 
-const LABELS = { male: 'Male', female: 'Female' } as const;
-const HINT_ID = 'body-model-hint';
+const LABELS = { male: 'Male', female: 'Female', other: 'Other' } as const;
+const HINT_ID = 'gender-hint';
 
-interface BodyModelStepProps {
+interface GenderStepProps {
   form: UseFormReturn<SignupInput>;
   onBack: () => void;
   onSubmit: (event: FormEvent<HTMLFormElement>) => void;
@@ -22,20 +22,20 @@ interface BodyModelStepProps {
   focusHeading: boolean;
 }
 
-export function BodyModelStep({
+export function GenderStep({
   form,
   onBack,
   onSubmit,
   pending,
   serverError,
   focusHeading,
-}: BodyModelStepProps) {
+}: GenderStepProps) {
   const {
     register,
     control,
     formState: { errors },
   } = form;
-  const selected = useWatch({ control, name: 'bodyModel' });
+  const selected = useWatch({ control, name: 'gender' });
 
   return (
     <form noValidate onSubmit={onSubmit}>
@@ -45,7 +45,7 @@ export function BodyModelStep({
             focusOnMount={focusHeading}
             description="This only changes the figure you see in the app. You can change it any time."
           >
-            Choose your body model
+            Choose your gender
           </StepHeading>
         </StaggerItem>
         <FormError
@@ -53,8 +53,8 @@ export function BodyModelStep({
           className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive"
         />
         <StaggerItem>
-          <div role="radiogroup" aria-label="Body model" className="grid grid-cols-2 gap-3">
-            {BODY_MODELS.map((model) => (
+          <div role="radiogroup" aria-label="Gender" className="grid grid-cols-3 gap-2 sm:gap-3">
+            {GENDERS.map((model) => (
               <label
                 key={model}
                 className={cn(
@@ -69,7 +69,7 @@ export function BodyModelStep({
                   value={model}
                   disabled={pending}
                   className="sr-only"
-                  {...register('bodyModel')}
+                  {...register('gender')}
                 />
                 {LABELS[model]}
                 <Check
@@ -82,9 +82,9 @@ export function BodyModelStep({
               </label>
             ))}
           </div>
-          {errors.bodyModel && (
+          {errors.gender && (
             <p role="alert" className="mt-2 text-sm text-destructive">
-              {errors.bodyModel.message}
+              {errors.gender.message}
             </p>
           )}
         </StaggerItem>
@@ -100,7 +100,7 @@ export function BodyModelStep({
             </div>
           </div>
           <p id={HINT_ID} className="min-h-5 text-center text-sm text-muted-foreground">
-            {selected ? '' : 'Choose Male or Female to create your account.'}
+            {selected ? '' : 'Choose a gender to create your account.'}
           </p>
         </StaggerItem>
       </StaggerGroup>

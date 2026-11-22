@@ -1,26 +1,26 @@
-import { BODY_MODELS, type BodyModel } from './bodyProportions';
+import { GENDERS, type Gender } from './bodyProportions';
 import { cn } from '@/lib/utils';
 
-const LABELS: Record<BodyModel, string> = { male: 'Male', female: 'Female' };
+const LABELS: Record<Gender, string> = { male: 'Male', female: 'Female', other: 'Other' };
 
-interface BodyModelSwitchProps {
-  value: BodyModel;
-  onChange: (model: BodyModel) => void;
+interface GenderSwitchProps {
+  value: Gender;
+  onChange: (model: Gender) => void;
 }
 
 // A small segmented control. Native radios give it arrow-key movement and a visible focus ring.
-export function BodyModelSwitch({ value, onChange }: BodyModelSwitchProps) {
+export function GenderSwitch({ value, onChange }: GenderSwitchProps) {
   return (
     <div
       role="radiogroup"
-      aria-label="Body model"
+      aria-label="Gender"
       className="inline-flex rounded-full border bg-muted p-0.5 text-sm"
     >
-      {BODY_MODELS.map((model) => (
+      {GENDERS.map((model) => (
         <label
           key={model}
           className={cn(
-            'cursor-pointer rounded-full px-4 py-1.5 font-medium transition-colors has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-ring',
+            'cursor-pointer rounded-full px-3.5 py-1.5 font-medium transition-colors has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-ring',
             value === model
               ? 'bg-background shadow-sm'
               : 'text-muted-foreground hover:text-foreground',
@@ -28,7 +28,7 @@ export function BodyModelSwitch({ value, onChange }: BodyModelSwitchProps) {
         >
           <input
             type="radio"
-            name="bodyModel"
+            name="gender"
             value={model}
             checked={value === model}
             onChange={() => onChange(model)}

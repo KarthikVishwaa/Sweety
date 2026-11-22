@@ -2,7 +2,7 @@ import { useFrame, useThree } from '@react-three/fiber';
 import { useEffect, useMemo, useRef, useState, type RefObject } from 'react';
 import { MathUtils, type BufferGeometry, type Group } from 'three';
 import { getBodyGeometry } from './bodyGeometry';
-import { BODY_PROPORTIONS, type BodyModel } from './bodyProportions';
+import { BODY_PROPORTIONS, type Gender } from './bodyProportions';
 import { SWAY_RADIANS } from './bodyScene.constants';
 import { RING_FILLS, glucoseBandColor, glucoseToFill } from './glucoseLevel';
 import {
@@ -18,14 +18,14 @@ import {
 import type { DragState } from './useDragRotation';
 
 interface BodyFigureProps {
-  model: BodyModel;
+  model: Gender;
   value: number | null;
   reducedMotion: boolean;
   drag: RefObject<DragState>;
 }
 
 interface Shown {
-  model: BodyModel;
+  model: Gender;
   geometry: BufferGeometry;
 }
 

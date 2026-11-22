@@ -1,5 +1,5 @@
-export const BODY_MODELS = ['male', 'female'] as const;
-export type BodyModel = (typeof BODY_MODELS)[number];
+export const GENDERS = ['male', 'female', 'other'] as const;
+export type Gender = (typeof GENDERS)[number];
 
 // Every length is a fraction of the stature S unless a name says otherwise. Adult, about 7.5 heads tall.
 export interface BodyProportions {
@@ -36,55 +36,69 @@ export interface BodyProportions {
 const MALE_STATURE = 1.78;
 const FEMALE_TO_MALE_STATURE = 0.93;
 
-export const BODY_PROPORTIONS: Record<BodyModel, BodyProportions> = {
-  male: {
-    stature: MALE_STATURE,
-    shoulderWidth: 0.26,
-    waistWidth: 0.18,
-    hipWidth: 0.19,
-    chestDepth: 0.12,
-    neckWidth: 0.055,
-    crotchHeight: 0.47,
-    shoulderY: 0.815,
-    chestY: 0.725,
-    waistY: 0.6,
-    hipY: 0.53,
-    kneeY: 0.285,
-    ankleY: 0.045,
-    headHeight: 1 / 7.5,
-    armAngle: 13,
-    shoulderRadius: 0.038,
-    upperArmRadius: 0.036,
-    elbowRadius: 0.029,
-    wristRadius: 0.019,
-    kneeRadius: 0.04,
-    gluteSize: 1,
-    bust: 0,
-  },
-  female: {
-    stature: MALE_STATURE * FEMALE_TO_MALE_STATURE,
-    shoulderWidth: 0.235,
-    waistWidth: 0.155,
-    hipWidth: 0.215,
-    chestDepth: 0.11,
-    neckWidth: 0.045,
-    crotchHeight: 0.45,
-    shoulderY: 0.815,
-    chestY: 0.725,
-    waistY: 0.625,
-    hipY: 0.525,
-    kneeY: 0.285,
-    ankleY: 0.045,
-    headHeight: 1 / 7.5,
-    armAngle: 13,
-    shoulderRadius: 0.034,
-    upperArmRadius: 0.031,
-    elbowRadius: 0.025,
-    wristRadius: 0.016,
-    kneeRadius: 0.037,
-    gluteSize: 1.15,
-    bust: 1,
-  },
+const MALE: BodyProportions = {
+  stature: MALE_STATURE,
+  shoulderWidth: 0.26,
+  waistWidth: 0.18,
+  hipWidth: 0.19,
+  chestDepth: 0.12,
+  neckWidth: 0.055,
+  crotchHeight: 0.47,
+  shoulderY: 0.815,
+  chestY: 0.725,
+  waistY: 0.6,
+  hipY: 0.53,
+  kneeY: 0.285,
+  ankleY: 0.045,
+  headHeight: 1 / 7.5,
+  armAngle: 13,
+  shoulderRadius: 0.038,
+  upperArmRadius: 0.036,
+  elbowRadius: 0.029,
+  wristRadius: 0.019,
+  kneeRadius: 0.04,
+  gluteSize: 1,
+  bust: 0,
+};
+
+const FEMALE: BodyProportions = {
+  stature: MALE_STATURE * FEMALE_TO_MALE_STATURE,
+  shoulderWidth: 0.235,
+  waistWidth: 0.155,
+  hipWidth: 0.215,
+  chestDepth: 0.11,
+  neckWidth: 0.045,
+  crotchHeight: 0.45,
+  shoulderY: 0.815,
+  chestY: 0.725,
+  waistY: 0.625,
+  hipY: 0.525,
+  kneeY: 0.285,
+  ankleY: 0.045,
+  headHeight: 1 / 7.5,
+  armAngle: 13,
+  shoulderRadius: 0.034,
+  upperArmRadius: 0.031,
+  elbowRadius: 0.025,
+  wristRadius: 0.016,
+  kneeRadius: 0.037,
+  gluteSize: 1.15,
+  bust: 1,
+};
+
+// The neutral figure sits halfway between the two, measurement by measurement.
+function average(first: BodyProportions, second: BodyProportions): BodyProportions {
+  const entries = Object.keys(first).map((key) => {
+    const name = key as keyof BodyProportions;
+    return [name, (first[name] + second[name]) / 2];
+  });
+  return Object.fromEntries(entries) as unknown as BodyProportions;
+}
+
+export const BODY_PROPORTIONS: Record<Gender, BodyProportions> = {
+  male: MALE,
+  female: FEMALE,
+  other: average(MALE, FEMALE),
 };
 
 export const MESH_TRIANGLE_BUDGET = 60_000;

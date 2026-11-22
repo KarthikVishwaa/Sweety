@@ -2,7 +2,7 @@ import { motion, useReducedMotion } from 'motion/react';
 import { DURATION, EASE_OUT } from '@/lib/motion';
 import { cn } from '@/lib/utils';
 
-const STEPS = ['Account', 'About you', 'Body model'] as const;
+const STEPS = ['Account', 'About you', 'Gender'] as const;
 
 export type ProgressStep = 1 | 2 | 3;
 

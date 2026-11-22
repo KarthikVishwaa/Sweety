@@ -283,19 +283,19 @@ Every error has the same shape: `{ "error": { "message": "...", "code": "...", "
 `INVALID_CREDENTIALS`, `UNAUTHENTICATED`, `SLOT_TAKEN`, `DAILY_LIMIT_REACHED`, `READING_NOT_FOUND`, `NOT_FOUND`,
 `RATE_LIMITED`, `PAYLOAD_TOO_LARGE`, `INVALID_JSON` and `INTERNAL_ERROR`.
 
-| Method | Path                 | Auth | Purpose                                       |
-| ------ | -------------------- | ---- | --------------------------------------------- |
-| GET    | `/api/health`        | no   | API and database status                       |
-| POST   | `/api/auth/register` | no   | Create an account and log in                  |
-| POST   | `/api/auth/login`    | no   | Log in                                        |
-| POST   | `/api/auth/logout`   | no   | Clear the cookie                              |
-| GET    | `/api/auth/me`       | yes  | The current user                              |
-| PATCH  | `/api/users/me`      | yes  | Change your body model (`male` or `female`)   |
-| GET    | `/api/readings`      | yes  | List readings (paginated, optional date)      |
-| POST   | `/api/readings`      | yes  | Create a reading                              |
-| PUT    | `/api/readings/:id`  | yes  | Replace a reading                             |
-| DELETE | `/api/readings/:id`  | yes  | Delete a reading                              |
-| GET    | `/api/reports`       | yes  | Daily, month-to-date or previous-month report |
+| Method | Path                 | Auth | Purpose                                        |
+| ------ | -------------------- | ---- | ---------------------------------------------- |
+| GET    | `/api/health`        | no   | API and database status                        |
+| POST   | `/api/auth/register` | no   | Create an account and log in                   |
+| POST   | `/api/auth/login`    | no   | Log in                                         |
+| POST   | `/api/auth/logout`   | no   | Clear the cookie                               |
+| GET    | `/api/auth/me`       | yes  | The current user                               |
+| PATCH  | `/api/users/me`      | yes  | Change your gender (`male`, `female`, `other`) |
+| GET    | `/api/readings`      | yes  | List readings (paginated, optional date)       |
+| POST   | `/api/readings`      | yes  | Create a reading                               |
+| PUT    | `/api/readings/:id`  | yes  | Replace a reading                              |
+| DELETE | `/api/readings/:id`  | yes  | Delete a reading                               |
+| GET    | `/api/reports`       | yes  | Daily, month-to-date or previous-month report  |
 
 ### Health
 
@@ -304,9 +304,9 @@ unreachable.
 
 ### Auth
 
-`POST /api/auth/register` with `{ "name", "email", "password", "dateOfBirth", "bodyModel" }` returns `201`, sets the cookie and returns the user. The
-password hash is never returned. `bodyModel` is `"male"` or `"female"` and is required for new sign-ups ("Please choose a body model."); the user object
-returned by register, login and `/me` includes it. `PATCH /api/users/me` with `{ "bodyModel" }` returns `200 { user }` and only ever changes the caller's own row.
+`POST /api/auth/register` with `{ "name", "email", "password", "dateOfBirth", "gender" }` returns `201`, sets the cookie and returns the user. The
+password hash is never returned. `gender` is `"male"` or `"female"` and is required for new sign-ups ("Please choose a gender."); the user object
+returned by register, login and `/me` includes it. `PATCH /api/users/me` with `{ "gender" }` returns `200 { user }` and only ever changes the caller's own row.
 
 ```json
 {
@@ -554,7 +554,7 @@ left, the form card on the right; a single column on phones).
 1. **Create your account** (floating mascot): name, email and password. Next is blocked with inline errors until they are valid.
 2. **About you** (waving mascot): date of birth in a native date input limited to today and 120 years ago, with the age shown
    live ("You are 36 years and 6 months old", announced politely to screen readers). Nothing medical is asked.
-3. **Choose your body model**: two selectable cards, Male and Female (native radios, so arrow keys work). Nothing is chosen by
+3. **Choose your gender**: two selectable cards, Male and Female (native radios, so arrow keys work). Nothing is chosen by
    default and "Create my account" stays disabled, with a reason, until one is. The waving mascot stays on the stage until a
    choice is made, then it cross-fades to the 3D body, which fills once to an in-range demo value (110).
 4. **Welcome to Sweety** (bouncing mascot): shown after the account exists, with the first name and a "Go to my dashboard" button.

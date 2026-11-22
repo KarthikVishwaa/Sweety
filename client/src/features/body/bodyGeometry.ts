@@ -1,9 +1,9 @@
 import { BufferAttribute, BufferGeometry } from 'three';
-import type { BodyModel } from './bodyProportions';
+import type { Gender } from './bodyProportions';
 import { generateBodyMesh } from './bodyMesh';
 import type { SurfaceMesh } from './surfaceNets';
 
-const geometries = new Map<BodyModel, Promise<BufferGeometry>>();
+const geometries = new Map<Gender, Promise<BufferGeometry>>();
 
 function toGeometry(mesh: SurfaceMesh): BufferGeometry {
   const geometry = new BufferGeometry();
@@ -15,7 +15,7 @@ function toGeometry(mesh: SurfaceMesh): BufferGeometry {
 }
 
 // Marching the field takes a few hundred milliseconds, so it runs off the main thread where possible.
-function generateInWorker(model: BodyModel): Promise<SurfaceMesh> {
+function generateInWorker(model: Gender): Promise<SurfaceMesh> {
   return new Promise((resolve, reject) => {
     const worker = new Worker(new URL('./bodyGeometry.worker.ts', import.meta.url), {
       type: 'module',
@@ -32,14 +32,14 @@ function generateInWorker(model: BodyModel): Promise<SurfaceMesh> {
   });
 }
 
-function generate(model: BodyModel): Promise<SurfaceMesh> {
+function generate(model: Gender): Promise<SurfaceMesh> {
   return typeof Worker === 'undefined'
     ? Promise.resolve(generateBodyMesh(model))
     : generateInWorker(model);
 }
 
 // The only entry point to the body shape, so a modelled GLB loader can replace it later.
-export function getBodyGeometry(model: BodyModel): Promise<BufferGeometry> {
+export function getBodyGeometry(model: Gender): Promise<BufferGeometry> {
   let geometry = geometries.get(model);
   if (!geometry) {
     geometry = generate(model).then(toGeometry);

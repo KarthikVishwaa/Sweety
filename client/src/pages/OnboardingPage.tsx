@@ -17,7 +17,7 @@ import {
 } from '@/features/auth/auth.schemas';
 import { AboutYouStep } from '@/features/auth/onboarding/AboutYouStep';
 import { AccountStep } from '@/features/auth/onboarding/AccountStep';
-import { BodyModelStep } from '@/features/auth/onboarding/BodyModelStep';
+import { GenderStep } from '@/features/auth/onboarding/GenderStep';
 import {
   OnboardingProgress,
   type ProgressStep,
@@ -61,7 +61,7 @@ export function OnboardingPage() {
     resolver: zodResolver(signupSchema),
     defaultValues: { name: '', email: '', password: '', dateOfBirth: '' },
   });
-  const bodyModel = useWatch({ control: form.control, name: 'bodyModel' });
+  const gender = useWatch({ control: form.control, name: 'gender' });
   const registerAccount = useRegister({ onRegistered: () => goTo('welcome', 1) });
   usePreloadMascot(NEXT_MASCOT[step]);
   usePreloadBody(step === 'about' || step === 'body');
@@ -127,7 +127,7 @@ export function OnboardingPage() {
         focusHeading
       />
     ) : step === 'body' ? (
-      <BodyModelStep
+      <GenderStep
         form={form}
         onBack={() => goTo('about', -1)}
         onSubmit={(event) => void submit(event)}
@@ -140,8 +140,8 @@ export function OnboardingPage() {
     );
 
   const stage: StageContent =
-    step === 'body' && bodyModel
-      ? { kind: 'body', model: bodyModel, value: DEMO_GLUCOSE_VALUE }
+    step === 'body' && gender
+      ? { kind: 'body', model: gender, value: DEMO_GLUCOSE_VALUE }
       : {
           kind: 'mascot',
           variant: step === 'account' ? 'floating' : step === 'welcome' ? 'bouncing' : 'waving',

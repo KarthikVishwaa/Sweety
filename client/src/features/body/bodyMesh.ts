@@ -1,4 +1,4 @@
-import { BODY_PROPORTIONS, type BodyModel } from './bodyProportions';
+import { BODY_PROPORTIONS, type Gender } from './bodyProportions';
 import { createBodySdf } from './bodySdf';
 import { extractSurface, type SurfaceMesh } from './surfaceNets';
 
@@ -14,7 +14,7 @@ function evenCellCount(span: number, voxel: number): number {
 }
 
 // A seamless, symmetrical mesh of the whole body, with normals taken from the signed-distance field.
-export function generateBodyMesh(model: BodyModel): SurfaceMesh {
+export function generateBodyMesh(model: Gender): SurfaceMesh {
   const { stature } = BODY_PROPORTIONS[model];
   const voxel = VOXEL * stature;
   const cellsX = evenCellCount(2 * HALF_WIDTH * stature, voxel);

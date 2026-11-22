@@ -1,4 +1,4 @@
-import type { BodyModel } from '@/features/body/bodyProportions';
+import type { Gender } from '@/features/body/bodyProportions';
 
 export type UserRole = 'patient' | 'doctor';
 
@@ -8,5 +8,5 @@ export interface User {
   email: string;
   role: UserRole;
   dateOfBirth: string | null;
-  bodyModel: BodyModel;
+  gender: Gender;
 }

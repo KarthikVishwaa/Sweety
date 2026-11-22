@@ -23,6 +23,8 @@ export default defineConfig({
     alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) },
   },
   build: {
+    // three.js is about 550 kB, but it sits in its own chunk that is only fetched when a figure is shown.
+    chunkSizeWarningLimit: 600,
     rollupOptions: { output: { manualChunks: vendorChunk } },
   },
   server: {
