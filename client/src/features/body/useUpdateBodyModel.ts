@@ -10,7 +10,7 @@ export function useUpdateBodyModel() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: updateBodyModel,
+    mutationFn: (bodyModel: BodyModel) => updateBodyModel(bodyModel),
     onMutate: async (bodyModel: BodyModel) => {
       await queryClient.cancelQueries({ queryKey: ME_KEY });
       const previous = queryClient.getQueryData<User | null>(ME_KEY);

@@ -1,5 +1,6 @@
 import { AppHeader } from '@/components/layout/AppHeader';
 import { useMe } from '@/features/auth/useAuth';
+import { BodyPanel } from '@/features/body/BodyPanel';
 import { DateNavigator } from '@/features/readings/components/DateNavigator';
 import { ReadingDialogs } from '@/features/readings/components/ReadingDialogs';
 import { ReadingsSection } from '@/features/readings/components/ReadingsSection';
@@ -13,20 +14,25 @@ export function DashboardPage() {
   const dialogs = useReadingDialogs();
 
   return (
-    <div className="mx-auto max-w-4xl space-y-6 p-4 sm:p-6">
+    <div className="mx-auto max-w-6xl space-y-6 p-4 sm:p-6">
       <AppHeader heading={`Hello, ${user?.name}`} />
-      <main className="space-y-8">
-        <div className="space-y-6">
-          <DateNavigator date={date} onChange={setDate} />
-          <ReadingsSection
-            date={date}
-            onAdd={dialogs.openAdd}
-            onEdit={dialogs.openEdit}
-            onDelete={dialogs.openDelete}
-          />
-        </div>
-        <ReportsSection date={date} onAddReading={() => dialogs.openAdd()} />
-      </main>
+      <div className="grid gap-6 lg:grid-cols-[20rem_minmax(0,1fr)] lg:items-start">
+        <aside className="lg:sticky lg:top-6">
+          <BodyPanel date={date} />
+        </aside>
+        <main className="min-w-0 space-y-8">
+          <div className="space-y-6">
+            <DateNavigator date={date} onChange={setDate} />
+            <ReadingsSection
+              date={date}
+              onAdd={dialogs.openAdd}
+              onEdit={dialogs.openEdit}
+              onDelete={dialogs.openDelete}
+            />
+          </div>
+          <ReportsSection date={date} onAddReading={() => dialogs.openAdd()} />
+        </main>
+      </div>
       <ReadingDialogs dialogs={dialogs} defaultDate={date} />
     </div>
   );
