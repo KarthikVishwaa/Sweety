@@ -1,10 +1,12 @@
 import { motion, useReducedMotion } from 'motion/react';
-import { cn } from '@/lib/utils';
 import { DURATION, EASE_OUT } from '@/lib/motion';
+import { cn } from '@/lib/utils';
 
-const STEPS = ['Account', 'About you'] as const;
+const STEPS = ['Account', 'About you', 'Body model'] as const;
 
-export function OnboardingProgress({ step }: { step: 1 | 2 }) {
+export type ProgressStep = 1 | 2 | 3;
+
+export function OnboardingProgress({ step }: { step: ProgressStep }) {
   const reducedMotion = useReducedMotion();
   const label = STEPS[step - 1];
 
@@ -29,9 +31,9 @@ export function OnboardingProgress({ step }: { step: 1 | 2 }) {
       </ol>
       <div className="h-1.5 overflow-hidden rounded-full bg-teal-100" aria-hidden="true">
         <motion.div
-          className="h-full rounded-full bg-primary"
+          className="h-full origin-left rounded-full bg-primary"
           initial={false}
-          animate={{ width: `${(step / STEPS.length) * 100}%` }}
+          animate={{ scaleX: step / STEPS.length }}
           transition={{ duration: reducedMotion ? 0 : DURATION.slow, ease: EASE_OUT }}
         />
       </div>

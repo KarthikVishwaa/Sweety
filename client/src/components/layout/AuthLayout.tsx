@@ -1,13 +1,12 @@
 import { motion } from 'motion/react';
 import type { ReactNode } from 'react';
+import { AuthStage, type StageContent } from '@/components/layout/AuthStage';
 import { Logo } from '@/components/layout/Logo';
-import { AnimatedMascot } from '@/components/mascot/AnimatedMascot';
-import type { MascotVariant } from '@/components/mascot/mascot.assets';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { fadeUp } from '@/lib/motion';
 
 interface AuthLayoutProps {
-  mascot: MascotVariant;
+  stage: StageContent;
   tagline: string;
   title?: string;
   description?: string;
@@ -16,7 +15,7 @@ interface AuthLayoutProps {
 }
 
 export function AuthLayout({
-  mascot,
+  stage,
   tagline,
   title,
   description,
@@ -27,7 +26,7 @@ export function AuthLayout({
     <div className="grid min-h-dvh bg-gradient-to-br from-teal-50 via-white to-teal-50 lg:grid-cols-2 dark:bg-background dark:bg-none">
       <aside className="flex flex-col items-center justify-center gap-3 px-6 pt-6 lg:gap-8 lg:p-12">
         <Logo className="h-9 lg:h-12" />
-        <AnimatedMascot variant={mascot} />
+        <AuthStage content={stage} />
         <p className="hidden max-w-xs text-center text-2xl font-semibold text-teal-900 lg:block">
           {tagline}
         </p>

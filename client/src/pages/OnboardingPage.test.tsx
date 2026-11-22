@@ -45,8 +45,18 @@ const dateOfBirthInput = () => screen.getByLabelText('Date of birth');
 const setDateOfBirth = (value: string) =>
   fireEvent.change(dateOfBirthInput(), { target: { value } });
 const ageText = () => document.querySelector('[aria-live="polite"]')?.textContent;
+const continueFromAbout = () => userEvent.click(screen.getByRole('button', { name: 'Continue' }));
 const createAccount = () =>
   userEvent.click(screen.getByRole('button', { name: 'Create my account' }));
+const chooseBodyModel = (name: 'Male' | 'Female') =>
+  userEvent.click(screen.getByRole('radio', { name }));
+
+async function completeAboutStep(dateOfBirth = '1990-05-15') {
+  await completeAccountStep();
+  setDateOfBirth(dateOfBirth);
+  await continueFromAbout();
+  await screen.findByRole('heading', { name: 'Choose your body model' });
+}
 
 describe('onboarding', () => {
   beforeAll(() => {
@@ -84,7 +94,7 @@ describe('onboarding', () => {
       expect(screen.getByText('Enter a valid email address')).toBeInTheDocument();
       expect(screen.getByText('Password must be at least 8 characters')).toBeInTheDocument();
       expect(screen.getByRole('heading', { name: 'Create your account' })).toBeInTheDocument();
-      expect(screen.getByText(/Step 1 of 2/)).toBeInTheDocument();
+      expect(screen.getByText(/Step 1 of 3/)).toBeInTheDocument();
       expect(screen.getByLabelText('Name')).toHaveAttribute('aria-invalid', 'true');
       expect(authApi.register).not.toHaveBeenCalled();
     });
@@ -181,19 +191,80 @@ describe('onboarding', () => {
       renderOnboarding();
       await completeAccountStep();
 
-      await createAccount();
+      await continueFromAbout();
       expect(await screen.findByText('Please enter your date of birth.')).toBeInTheDocument();
 
       setDateOfBirth('2026-11-22');
-      await createAccount();
+      await continueFromAbout();
       expect(await screen.findByText('Date of birth cannot be in the future.')).toBeInTheDocument();
+      expect(screen.getByText(/Step 2 of 3/)).toBeInTheDocument();
       expect(authApi.register).not.toHaveBeenCalled();
     });
 
-    it('registers once with name, email, password and date of birth', async () => {
+    it('does not create the account yet, and moves on to the body model', async () => {
       renderOnboarding();
-      await completeAccountStep();
-      setDateOfBirth('1990-05-15');
+      await completeAboutStep();
+
+      expect(screen.getByText(/Step 3 of 3/)).toBeInTheDocument();
+      expect(authApi.register).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('step 3: body model', () => {
+    it('starts with nothing chosen and the button disabled, with a reason', async () => {
+      renderOnboarding();
+      await completeAboutStep();
+
+      expect(screen.getByRole('radio', { name: 'Male' })).not.toBeChecked();
+      expect(screen.getByRole('radio', { name: 'Female' })).not.toBeChecked();
+      const button = screen.getByRole('button', { name: 'Create my account' });
+      expect(button).toBeDisabled();
+      expect(button).toHaveAccessibleDescription('Choose Male or Female to create your account.');
+      expect(screen.getByText(/only changes the figure you see/)).toBeInTheDocument();
+    });
+
+    it('switches the selected card and enables the button', async () => {
+      renderOnboarding();
+      await completeAboutStep();
+
+      await chooseBodyModel('Male');
+      expect(screen.getByRole('radio', { name: 'Male' })).toBeChecked();
+      expect(screen.getByRole('button', { name: 'Create my account' })).toBeEnabled();
+
+      await chooseBodyModel('Female');
+      expect(screen.getByRole('radio', { name: 'Female' })).toBeChecked();
+      expect(screen.getByRole('radio', { name: 'Male' })).not.toBeChecked();
+    });
+
+    it('moves between the cards with the arrow keys', async () => {
+      renderOnboarding();
+      await completeAboutStep();
+
+      await userEvent.tab();
+      await userEvent.tab();
+      screen.getByRole('radio', { name: 'Male' }).focus();
+      await userEvent.keyboard('{ArrowRight}');
+
+      expect(screen.getByRole('radio', { name: 'Female' })).toBeChecked();
+    });
+
+    it('keeps the choice when going Back and forward again', async () => {
+      renderOnboarding();
+      await completeAboutStep();
+      await chooseBodyModel('Female');
+
+      await userEvent.click(screen.getByRole('button', { name: 'Back' }));
+      await screen.findByRole('heading', { name: 'A little about you' });
+      await continueFromAbout();
+      await screen.findByRole('heading', { name: 'Choose your body model' });
+
+      expect(screen.getByRole('radio', { name: 'Female' })).toBeChecked();
+    });
+
+    it('registers once with name, email, password, date of birth and body model', async () => {
+      renderOnboarding();
+      await completeAboutStep();
+      await chooseBodyModel('Female');
 
       await createAccount();
 
@@ -203,14 +274,15 @@ describe('onboarding', () => {
         email: 'asha@example.com',
         password: 'sweet1234',
         dateOfBirth: '1990-05-15',
+        bodyModel: 'female',
       });
     });
 
     it('shows a spinner and disables the button while the account is created', async () => {
       vi.mocked(authApi.register).mockReturnValue(new Promise(() => undefined));
       renderOnboarding();
-      await completeAccountStep();
-      setDateOfBirth('1990-05-15');
+      await completeAboutStep();
+      await chooseBodyModel('Male');
 
       await createAccount();
 
@@ -225,8 +297,8 @@ describe('onboarding', () => {
       const message = 'An account with this email already exists.';
       vi.mocked(authApi.register).mockRejectedValue(new ApiError(message, 409, { email: message }));
       renderOnboarding();
-      await completeAccountStep();
-      setDateOfBirth('1990-05-15');
+      await completeAboutStep();
+      await chooseBodyModel('Male');
 
       await createAccount();
 
@@ -237,14 +309,14 @@ describe('onboarding', () => {
       expect(screen.getByLabelText('Name')).toHaveValue('Asha Rao');
     });
 
-    it('keeps a date-of-birth error from the server on step 2', async () => {
+    it('returns to step 2 with a date-of-birth error from the server', async () => {
       const message = 'Please enter a valid date of birth.';
       vi.mocked(authApi.register).mockRejectedValue(
         new ApiError(message, 400, { dateOfBirth: message }),
       );
       renderOnboarding();
-      await completeAccountStep();
-      setDateOfBirth('1990-05-15');
+      await completeAboutStep();
+      await chooseBodyModel('Male');
 
       await createAccount();
 
@@ -252,29 +324,29 @@ describe('onboarding', () => {
       expect(screen.getByRole('heading', { name: 'A little about you' })).toBeInTheDocument();
     });
 
-    it('shows an error that is not tied to a field at the top of step 2', async () => {
+    it('shows an error that is not tied to a field at the top of step 3', async () => {
       vi.mocked(authApi.register).mockRejectedValue(new ApiError('Something went wrong.', 500));
       renderOnboarding();
-      await completeAccountStep();
-      setDateOfBirth('1990-05-15');
+      await completeAboutStep();
+      await chooseBodyModel('Male');
 
       await createAccount();
 
       expect(await screen.findByRole('alert')).toHaveTextContent('Something went wrong.');
-      expect(screen.getByRole('heading', { name: 'A little about you' })).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: 'Choose your body model' })).toBeInTheDocument();
     });
 
     it('celebrates on success with the first name, no progress bar, and a dashboard button', async () => {
       renderOnboarding();
-      await completeAccountStep();
-      setDateOfBirth('1990-05-15');
+      await completeAboutStep();
+      await chooseBodyModel('Male');
 
       await createAccount();
 
       expect(
         await screen.findByRole('heading', { name: 'Welcome to Sweety, Asha!' }),
       ).toBeInTheDocument();
-      expect(screen.queryByText(/Step \d of 2/)).not.toBeInTheDocument();
+      expect(screen.queryByText(/Step \d of 3/)).not.toBeInTheDocument();
       expect(screen.queryByText('Dashboard page')).not.toBeInTheDocument();
       expect(localStorage.length).toBe(0);
       expect(sessionStorage.length).toBe(0);

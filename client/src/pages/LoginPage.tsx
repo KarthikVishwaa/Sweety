@@ -42,7 +42,7 @@ export function LoginPage() {
 
   return (
     <AuthLayout
-      mascot="love"
+      stage={{ kind: 'mascot', variant: 'love' }}
       tagline="We missed you!"
       title="Welcome back"
       description="Sign in to your Sweety account."

@@ -51,3 +51,35 @@ export const shake: Variants = {
   idle: { x: 0 },
   shake: { x: [0, -10, 10, -8, 8, -4, 4, 0], transition: { duration: DURATION.slow } },
 };
+
+export const ENTRANCE_DURATION = 0.35;
+
+// Elements of a screen rise into place one after another.
+export const riseIn: Variants = {
+  hidden: { opacity: 0, y: 12 },
+  visible: { opacity: 1, y: 0, transition: { duration: ENTRANCE_DURATION, ease: EASE_OUT } },
+};
+
+// People who asked for less motion get a short fade instead of any movement.
+export const stepFade: Variants = {
+  enter: { opacity: 0 },
+  center: { opacity: 1, transition: { duration: DURATION.fast } },
+};
+
+export const popIn: Variants = {
+  hidden: { opacity: 0, scale: 0.94 },
+  visible: { opacity: 1, scale: 1, transition: { type: 'spring', stiffness: 220, damping: 20 } },
+};
+
+// One stage content replaces another while they overlap.
+export const stageSwap: Variants = {
+  hidden: { opacity: 0, scale: 0.96 },
+  visible: { opacity: 1, scale: 1, transition: { duration: ENTRANCE_DURATION, ease: EASE_OUT } },
+  exit: { opacity: 0, scale: 0.98, transition: { duration: DURATION.base } },
+};
+
+export const stageFade: Variants = {
+  hidden: { opacity: 0 },
+  visible: { opacity: 1, transition: { duration: DURATION.fast } },
+  exit: { opacity: 0, transition: { duration: DURATION.fast } },
+};
