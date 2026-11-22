@@ -206,7 +206,8 @@ export async function optimizeMascots({ sourceDir, outputDir, checkDir }) {
       report.push({
         clip: name,
         seam,
-        'source frames': seam === 'pingpong' ? 'all, forwards then back' : `${loop.start}-${loop.end}`,
+        'source frames':
+          seam === 'pingpong' ? 'all, forwards then back' : `${loop.start}-${loop.end}`,
         'output frames': output.frames,
         'last>first diff': assessment.lastToFirst.toFixed(2),
         'typical step diff': assessment.typicalStep.toFixed(2),
