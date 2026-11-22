@@ -1,5 +1,4 @@
 import { useEffect } from 'react';
-import { getBodyGeometry } from './bodyGeometry';
 import type { Gender } from './bodyProportions';
 import { useWebGLSupport } from './useWebGLSupport';
 
@@ -10,9 +9,12 @@ export function usePreloadBody(genders: readonly Gender[]): void {
 
   useEffect(() => {
     if (!supported || key === '') return;
+    // Both are dynamic imports, so pages that only preload never pull three.js into their own chunk.
     void import('./BodyGlucoseScene').catch(() => undefined);
-    for (const gender of key.split(',') as Gender[]) {
-      void getBodyGeometry(gender).catch(() => undefined);
-    }
+    void import('./bodyGeometry')
+      .then(({ getBodyGeometry }) =>
+        Promise.all((key.split(',') as Gender[]).map((gender) => getBodyGeometry(gender))),
+      )
+      .catch(() => undefined);
   }, [key, supported]);
 }
