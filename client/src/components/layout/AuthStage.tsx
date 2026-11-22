@@ -17,7 +17,7 @@ export function AuthStage({ content }: { content: StageContent }) {
   return (
     <div
       aria-hidden="true"
-      className="relative h-40 w-44 shrink-0 sm:h-48 sm:w-56 lg:h-[22rem] lg:w-80 xl:h-[26rem]"
+      className="relative h-40 w-44 shrink-0 sm:h-48 sm:w-56 lg:h-[24rem] lg:w-80 xl:h-[34rem] xl:w-[28rem]"
     >
       <AnimatePresence initial={false}>
         <motion.div

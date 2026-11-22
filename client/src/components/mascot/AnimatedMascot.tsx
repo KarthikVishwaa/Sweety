@@ -45,7 +45,7 @@ export function AnimatedMascot({ variant, className }: AnimatedMascotProps) {
     <div
       aria-hidden="true"
       className={cn(
-        'relative w-32 shrink-0 sm:w-40 lg:w-60 xl:w-80 dark:overflow-hidden dark:rounded-3xl dark:bg-white',
+        'relative w-32 shrink-0 sm:w-40 lg:w-60 xl:w-[26rem] dark:overflow-hidden dark:rounded-3xl dark:bg-white',
         className,
       )}
       style={{ aspectRatio: MASCOT_ASPECT_RATIO }}

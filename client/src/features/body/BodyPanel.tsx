@@ -19,7 +19,7 @@ export function BodyPanel({ date }: { date: string }) {
       aria-label="Your glucose at a glance"
       className="flex flex-col items-center gap-3 rounded-xl border bg-card p-4"
     >
-      <div className="h-[280px] w-full lg:h-[min(70vh,560px)]">
+      <div className="h-[280px] w-full lg:h-[min(72vh,620px)] xl:h-[min(76vh,720px)]">
         <BodyGlucoseGauge model={user.gender} value={latest?.value ?? null} />
       </div>
       <p aria-live="polite" className="min-h-5 text-center text-sm font-medium">

@@ -305,7 +305,7 @@ unreachable.
 ### Auth
 
 `POST /api/auth/register` with `{ "name", "email", "password", "dateOfBirth", "gender" }` returns `201`, sets the cookie and returns the user. The
-password hash is never returned. `gender` is `"male"` or `"female"` and is required for new sign-ups ("Please choose a gender."); the user object
+password hash is never returned. `gender` is `"male"`, `"female"` or `"other"` and is required for new sign-ups ("Please choose a gender."); the user object
 returned by register, login and `/me` includes it. `PATCH /api/users/me` with `{ "gender" }` returns `200 { user }` and only ever changes the caller's own row.
 
 ```json
@@ -554,7 +554,7 @@ left, the form card on the right; a single column on phones).
 1. **Create your account** (floating mascot): name, email and password. Next is blocked with inline errors until they are valid.
 2. **About you** (waving mascot): date of birth in a native date input limited to today and 120 years ago, with the age shown
    live ("You are 36 years and 6 months old", announced politely to screen readers). Nothing medical is asked.
-3. **Choose your gender**: two selectable cards, Male and Female (native radios, so arrow keys work). Nothing is chosen by
+3. **Choose your gender**: three selectable cards, Male, Female and Other (native radios, so arrow keys work). Nothing is chosen by
    default and "Create my account" stays disabled, with a reason, until one is. The waving mascot stays on the stage until a
    choice is made, then it cross-fades to the 3D body, which fills once to an in-range demo value (110).
 4. **Welcome to Sweety** (bouncing mascot): shown after the account exists, with the first name and a "Go to my dashboard" button.
@@ -565,12 +565,12 @@ step 2. Back keeps everything typed; the form state lives only in memory and the
 loving mascot. Every screen has a staggered entrance, a direction-aware step slide and an animated progress bar, all using only
 transform and opacity; with `prefers-reduced-motion` they become short fades.
 
-### Body model and the glucose body
+### Gender and the glucose body
 
 The dashboard shows a 3D figure that fills with a colour like a glass of liquid: empty at 40 mg/dl, full (top of the head) at 400
 or more, linear in between. The colour follows the same bands as the rest of the app (below 70 amber, 70 to 180 green, above 180
 red). It shows the latest reading of the selected day (after dinner, then lunch, breakfast, morning) and the meaning is always
-given as text under it ("After lunch, 182 mg/dl, High"). A Male / Female switch under it calls `PATCH /api/users/me` with an
+given as text under it ("After lunch, 182 mg/dl, High"). A Male / Female / Other switch under it calls `PATCH /api/users/me` with an
 optimistic update and rolls back with an error toast if the call fails.
 
 Assumptions and limits:
@@ -580,7 +580,7 @@ Assumptions and limits:
   `client/src/features/body/bodyProportions.ts`. `getBodyGeometry(model)` is the only entry point, so a modelled GLB can replace it.
 - The mesh takes about a quarter to half a second to build, so it runs in a Web Worker and is cached per model. The worker is a
   same-origin module, so the CSP needed no change.
-- Existing accounts get `male` (the column default) and can change it from the dashboard.
+- `other` is a full option with its own neutral figure (until a modelled one replaces it, the average of the male and female proportions). Existing accounts get `male` (the column default) and can change it from the dashboard.
 - Only **one WebGL canvas** is on a page at a time (the dashboard, or the onboarding stage). three.js loads lazily, so the login
   page does not download it. Without WebGL, or if it fails, a flat card with the value, a band badge and a level meter is shown.
 - Rendering pauses when the tab is hidden or the canvas is off screen, and draws on demand under reduced motion.
