@@ -36,10 +36,10 @@ function createGlucoseMaterial(
 ) {
   const material = new MeshPhysicalMaterial({
     color: 0xffffff,
-    roughness: 0.14,
+    roughness: 0.28,
     metalness: 0,
-    clearcoat: 1,
-    clearcoatRoughness: 0.08,
+    clearcoat: 0.35,
+    clearcoatRoughness: 0.3,
     envMapIntensity: 1,
     transparent: true,
     depthWrite: side === FrontSide,

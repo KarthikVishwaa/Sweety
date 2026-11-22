@@ -39,9 +39,9 @@ float glucoseSurface = uLevelY + glucoseWave;
 float glucoseEdge = fwidth(vGlucoseWorld.y) + 0.0006;
 float glucoseBelow = 1.0 - smoothstep(glucoseSurface - glucoseEdge, glucoseSurface + glucoseEdge, vGlucoseWorld.y);
 float glucoseDepth = clamp((glucoseSurface - vGlucoseWorld.y) / 0.9, 0.0, 1.0);
-vec3 glucoseLiquid = mix(uColor * 1.08, uColor * 0.55, glucoseDepth);
-diffuseColor.rgb = mix(vec3(0.93, 0.96, 1.0), glucoseLiquid, glucoseBelow);
-diffuseColor.a = mix(mix(0.07, 0.04, uBackFace), mix(0.9, 0.82, uBackFace), glucoseBelow) * uOpacity;
+vec3 glucoseLiquid = mix(uColor * 1.15, uColor * 0.45, glucoseDepth);
+diffuseColor.rgb = mix(vec3(0.82, 0.88, 0.95), glucoseLiquid, glucoseBelow);
+diffuseColor.a = mix(mix(0.12, 0.06, uBackFace), mix(0.84, 0.78, uBackFace), glucoseBelow) * uOpacity;
 `;
 
 // A soft inner glow in the liquid, a fresnel rim on the glass, a thin bright meniscus at the surface and
@@ -54,11 +54,11 @@ float glucoseFresnel = pow(1.0 - clamp(abs(dot(normal, normalize(vViewPosition))
 float glucoseMeniscus = (1.0 - smoothstep(0.0, glucoseEdge * 2.0 + 0.0025, abs(vGlucoseWorld.y - glucoseSurface)))
   * step(0.0, uLevelY);
 float glucoseRings = max(glucoseRing(vGlucoseWorld.y, uRingLow), glucoseRing(vGlucoseWorld.y, uRingHigh));
-totalEmissiveRadiance += glucoseLiquid * glucoseBelow * (0.28 + 0.3 * glucoseFresnel) * (1.0 - 0.4 * uBackFace);
-totalEmissiveRadiance += vec3(0.75, 0.85, 0.95) * glucoseFresnel * glucoseGlass * 0.35 * glucoseFront;
+totalEmissiveRadiance += glucoseLiquid * glucoseBelow * (0.08 + 0.3 * glucoseFresnel) * (1.0 - 0.4 * uBackFace);
+totalEmissiveRadiance += vec3(0.62, 0.74, 0.86) * glucoseFresnel * glucoseGlass * 0.5 * glucoseFront;
 totalEmissiveRadiance += vec3(1.0) * (glucoseMeniscus * 0.55 + glucoseRings * 0.25) * glucoseFront;
 diffuseColor.a = max(
   diffuseColor.a,
-  (glucoseFresnel * 0.4 * glucoseGlass + glucoseMeniscus * 0.7 + glucoseRings * 0.3) * glucoseFront * uOpacity
+  (glucoseFresnel * 0.6 * glucoseGlass + glucoseMeniscus * 0.7 + glucoseRings * 0.3) * glucoseFront * uOpacity
 );
 `;
