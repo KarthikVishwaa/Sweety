@@ -82,6 +82,41 @@ function sampleGrid(sdf: Sdf, grid: SurfaceGrid): Float32Array {
   return samples;
 }
 
+// Where two samples that are inside touch only diagonally across a face (a checkerboard), the quads
+// either side of that face share one edge and the surface is no longer a manifold. Filling in the outside
+// sample closest to the surface joins the two inside samples, so every such face has one clear shape.
+function joinCheckerboards(samples: Float32Array, grid: SurfaceGrid): void {
+  const [sizeX, sizeY, sizeZ] = grid.cells.map((cells) => cells + 1) as [number, number, number];
+  const strides = [1, sizeX, sizeX * sizeY] as const;
+  const sizes = [sizeX, sizeY, sizeZ] as const;
+
+  for (const [first, second] of [
+    [0, 1],
+    [0, 2],
+    [1, 2],
+  ] as const) {
+    const limit = [sizes[first]! - 1, sizes[second]! - 1] as const;
+    for (let other = 0; other < sizeX * sizeY * sizeZ; other++) {
+      const coordinates = [
+        other % sizeX,
+        Math.floor(other / sizeX) % sizeY,
+        Math.floor(other / (sizeX * sizeY)),
+      ];
+      if (coordinates[first]! >= limit[0] || coordinates[second]! >= limit[1]) continue;
+      const a = other;
+      const b = a + strides[first]!;
+      const c = a + strides[second]!;
+      const d = b + strides[second]!;
+      const inside = (index: number) => samples[index]! < 0;
+      if (inside(a) === inside(d) && inside(b) === inside(c) && inside(a) !== inside(b)) {
+        const outside = inside(a) ? [b, c] : [a, d];
+        const weakest = samples[outside[0]!]! <= samples[outside[1]!]! ? outside[0]! : outside[1]!;
+        samples[weakest] = -Math.abs(samples[weakest]!);
+      }
+    }
+  }
+}
+
 export function gradient(
   sdf: Sdf,
   x: number,
@@ -101,6 +136,7 @@ export function extractSurface(sdf: Sdf, grid: SurfaceGrid): SurfaceMesh {
   const sizeX = cellsX + 1;
   const sizeY = cellsY + 1;
   const samples = sampleGrid(sdf, grid);
+  joinCheckerboards(samples, grid);
   const sampleAt = (i: number, j: number, k: number) => samples[i + sizeX * (j + sizeY * k)]!;
   const cellAt = (i: number, j: number, k: number) => i + cellsX * (j + cellsY * k);
   const cellVertex = new Int32Array(cellsX * cellsY * cellsZ).fill(-1);
