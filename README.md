@@ -597,13 +597,21 @@ own code, with no scanned, purchased or third-party model involved, so no attrib
    smoothing (no shrinkage), and given normals from the field's gradient. Feet have a heel, a high instep, a ball at 72 per cent of
    the length, a rounded toe box with a straighter big-toe edge, a carved medial arch, a flat sole on y = 0 and 10 degrees of
    toe-out.
-   The shoulders are part of the torso loft, not separate balls: its upper stations widen to the acromion and then follow the
-   trapezius line (20 degrees from horizontal for the male figure, 25 for the female) to a neck that is 0.05 of the stature long;
-   the deltoid is a teardrop aligned with the upper arm, blended into it over a large radius. The torso, pelvis and top of the
-   thighs share one loft (the waist flares into the hips with no plateau), the knee and calf are stations of the leg loft rather
+   The shoulders are one bent tube, not separate balls and capsules: a sphere buried in the neck, a single straight slope
+   (20 degrees from horizontal for the male figure, 25 for the female) that leaves the neck 0.05 of the stature below the chin, the
+   round cap of the shoulder joint, and the deltoid teardrop that carries on down the upper arm. The pieces share their spheres,
+   so they meet tangentially: there is no ridge along the top, no lump at the outer end and no collar. (Two near-parallel
+   surfaces joined by a smooth union add up to a quarter of the blend radius of extra material where they run together, which
+   is what made the earlier ridge.) The upper arm is blended into the ribcage over 0.04, so the armpit is a soft fold. The torso,
+   pelvis and top of the (the waist flares into the hips with no plateau), the knee and calf are stations of the leg loft rather
    than separate shapes, and the hands have a palm, four fanned fingers with a relaxed curl and a two-section thumb. The female
    chest is a low, shallow swell (about 0.012 proud of the ribcage, narrower than it). The surface-nets step fills in the outside
    sample of any checkerboard face, so the mesh is a manifold even where fingers nearly touch.
+   After extraction the neck, shoulders and armpits (and only they, with weights that fade to zero at the edge of that region) are
+   relaxed: every vertex moves towards the average of its neighbours and is put back on the surface of the field, which evens out
+   the triangles so the angle between neighbouring faces stays small on a round shoulder, without moving the outline (the largest
+   distance from the exact surface is 0.0001 of the stature). Mirrored vertices are then paired and restored to exact symmetry.
+   Plain Taubin smoothing was tried first and did not help: the facets come from sampling a round shape on a voxel grid.
 3. `npm run models:generate` (`scripts/models/generate-bodies.mjs`, using `@gltf-transform/core`, `@gltf-transform/functions` and
    `meshoptimizer`) runs the generator in Node, validates each figure and writes `client/src/assets/models/{male,female,other}.glb`
    at unit height: one mesh, welded, positions and normals only, quantised and meshopt-compressed (about 600 kB each). It stops
@@ -611,13 +619,14 @@ own code, with no scanned, purchased or third-party model involved, so no attrib
    the bundle; the app loads the GLB with three's `GLTFLoader` and `MeshoptDecoder` and scales it to the stature.
 
 The validation table printed by the script (and checked again by `bodyModels.test.ts` on the committed files, so a broken bake
-fails CI):
+fails CI). The last two columns guard the shoulders: the largest angle between neighbouring faces around the neck and shoulders
+may be 8 degrees at most, and the top of the shoulder may not rise anywhere on its way from the neck to the arm:
 
-| Figure | Triangles | Height | Components | Boundary edges | Non-manifold edges | Degenerate | Volume > 0 | Asymmetry | Foot / S | Shoulder / S | Waist / S | Hip / S | GLB    |
-| ------ | --------- | ------ | ---------- | -------------- | ------------------ | ---------- | ---------- | --------- | -------- | ------------ | --------- | ------- | ------ |
-| male   | 112,160   | 1      | 1          | 0              | 0                  | 0          | yes        | 0.00100   | 0.156    | 0.264        | 0.176     | 0.200   | 606 kB |
-| female | 109,996   | 1      | 1          | 0              | 0                  | 0          | yes        | 0.00099   | 0.152    | 0.240        | 0.160     | 0.216   | 598 kB |
-| other  | 111,320   | 1      | 1          | 0              | 0                  | 0          | yes        | 0.00092   | 0.153    | 0.256        | 0.168     | 0.208   | 603 kB |
+| Figure | Triangles | Height | Components | Boundary edges | Non-manifold edges | Degenerate | Volume > 0 | Asymmetry | Foot / S | Shoulder / S | Waist / S | Hip / S | Shoulder angle | Shoulder bumps | GLB    |
+| ------ | --------- | ------ | ---------- | -------------- | ------------------ | ---------- | ---------- | --------- | -------- | ------------ | --------- | ------- | -------------- | -------------- | ------ |
+| male   | 111,664   | 1      | 1          | 0              | 0                  | 0          | yes        | 0         | 0.156    | 0.256        | 0.176     | 0.200   | 7.1            | 0              | 602 kB |
+| female | 109,888   | 1      | 1          | 0              | 0                  | 0          | yes        | 0         | 0.152    | 0.232        | 0.160     | 0.216   | 7.4            | 0              | 595 kB |
+| other  | 110,956   | 1      | 1          | 0              | 0                  | 0          | yes        | 0         | 0.153    | 0.240        | 0.168     | 0.208   | 7.6            | 0              | 599 kB |
 
 Widths are measured on the mesh (shoulder includes the deltoids; the arms are excluded from the waist and hips) and must be
 within 0.015 of the table; the foot within 0.008.
