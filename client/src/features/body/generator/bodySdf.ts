@@ -1,8 +1,9 @@
 import { BODY_PROPORTIONS, type Gender } from '../bodyProportions.ts';
 import { armParts } from './armParts.ts';
 import { footParts } from './footParts.ts';
-import { headParts, shoulderParts } from './headParts.ts';
+import { headParts } from './headParts.ts';
 import { legParts } from './legParts.ts';
+import { shoulderParts } from './shoulderParts.ts';
 import { smoothMax, smoothMin, type Part, type Sdf } from './sdf.ts';
 import { torsoParts } from './torsoParts.ts';
 

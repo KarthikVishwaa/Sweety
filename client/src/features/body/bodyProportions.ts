@@ -33,6 +33,7 @@ export interface BodyProportions {
   waistDepth: number;
   hipDepth: number;
   neckWidth: number;
+  neckLength: number;
 
   thighWidth: number;
   kneeWidth: number;
@@ -53,6 +54,8 @@ export interface BodyProportions {
 
   armAngle: number;
   elbowBend: number;
+  /** Angle of the trapezius line from the neck to the shoulder, below horizontal. */
+  trapeziusSlope: number;
 
   /** Size of the gluteal curve (1 is typical) and of the chest contour (0 is a flat male chest). */
   gluteSize: number;
@@ -85,7 +88,8 @@ const MALE: BodyProportions = {
   chestDepth: 0.12,
   waistDepth: 0.106,
   hipDepth: 0.118,
-  neckWidth: 0.058,
+  neckWidth: 0.055,
+  neckLength: 0.05,
 
   thighWidth: 0.1,
   kneeWidth: 0.07,
@@ -104,8 +108,9 @@ const MALE: BodyProportions = {
   palmWidth: 0.046,
   thumbAngle: 30,
 
-  armAngle: 13,
-  elbowBend: 8,
+  armAngle: 14,
+  elbowBend: 12,
+  trapeziusSlope: 20,
 
   gluteSize: 1,
   chestContour: 0,
@@ -134,7 +139,8 @@ const FEMALE: BodyProportions = {
   chestDepth: 0.11,
   waistDepth: 0.094,
   hipDepth: 0.124,
-  neckWidth: 0.05,
+  neckWidth: 0.045,
+  neckLength: 0.05,
 
   thighWidth: 0.106,
   kneeWidth: 0.066,
@@ -153,8 +159,9 @@ const FEMALE: BodyProportions = {
   palmWidth: 0.042,
   thumbAngle: 30,
 
-  armAngle: 14,
-  elbowBend: 8,
+  armAngle: 15,
+  elbowBend: 12,
+  trapeziusSlope: 25,
 
   gluteSize: 1.15,
   chestContour: 1,
