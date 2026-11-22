@@ -23,19 +23,36 @@ report. The backend is Node, Express and PostgreSQL, the frontend is React, and 
 
 ## Screenshots
 
-The images below live in [`docs/screenshots/`](docs/screenshots/README.md). Until they are added, GitHub shows them as broken
-images.
+The images below are in [`docs/screenshots/`](docs/screenshots/README.md). They are captured from the running app by
+`npm run screenshots` (see below), so they can be retaken whenever the screens change.
 
-| Screen                                | Image                                                                     |
-| ------------------------------------- | ------------------------------------------------------------------------- |
-| Login                                 | ![Login](docs/screenshots/01-login.png)                                   |
-| Dashboard with the four reading slots | ![Dashboard](docs/screenshots/02-dashboard-readings.png)                  |
-| Add reading dialog showing validation | ![Add reading validation](docs/screenshots/03-add-reading-validation.png) |
-| Daily report                          | ![Daily report](docs/screenshots/04-daily-report.png)                     |
-| Month-to-date report with chart       | ![Month to date chart](docs/screenshots/05-month-to-date-chart.png)       |
-| Previous month report                 | ![Previous month](docs/screenshots/06-previous-month.png)                 |
-| History page with pagination          | ![History pagination](docs/screenshots/07-history-pagination.png)         |
-| Mobile layout                         | ![Mobile](docs/screenshots/08-mobile.png)                                 |
+| Screen           | Image                                                                |
+| ---------------- | -------------------------------------------------------------------- |
+| Login            | ![Login](docs/screenshots/01-login.png)                              |
+| Sign-up, step 1  | ![Sign-up, step 1](docs/screenshots/02-onboarding-account.png)       |
+| Sign-up, step 2  | ![Sign-up, step 2](docs/screenshots/03-onboarding-dob-age.png)       |
+| Sign-up, step 3  | ![Sign-up, step 3](docs/screenshots/04-onboarding-gender-figure.png) |
+| Dashboard        | ![Dashboard](docs/screenshots/05-dashboard-readings.png)             |
+| Add reading      | ![Add reading](docs/screenshots/06-add-reading-validation.png)       |
+| Daily report     | ![Daily report](docs/screenshots/07-daily-report.png)                |
+| Month to date    | ![Month to date](docs/screenshots/08-month-to-date-chart.png)        |
+| Previous month   | ![Previous month](docs/screenshots/09-previous-month.png)            |
+| History          | ![History](docs/screenshots/10-history-pagination.png)               |
+| Profile          | ![Profile](docs/screenshots/11-profile-insights.png)                 |
+| Profile, charts  | ![Profile, charts](docs/screenshots/11b-profile-insights-charts.png) |
+| Mobile dashboard | ![Mobile dashboard](docs/screenshots/12-mobile.png)                  |
+| Mobile sign-up   | ![Mobile sign-up](docs/screenshots/13-mobile-onboarding.png)         |
+
+**Retaking them.** Start the app (`npm run db:up`, `npm run db:migrate`, `npm run seed`, `npm run dev`) and run:
+
+```bash
+npm run screenshots              # all of them
+npm run screenshots -- 05 11     # only the groups that hold shots 05 and 11
+```
+
+It uses Playwright with Chromium (install it once with `npx playwright install chromium`) and `sharp` to shrink the PNGs; both
+are root dev dependencies and are not part of the app, the Docker images or CI. It will not run with `NODE_ENV=production`,
+signs up throwaway `shots+<time>@example.com` accounts and deletes them when it finishes, and only reads the demo account.
 
 ## Features
 
