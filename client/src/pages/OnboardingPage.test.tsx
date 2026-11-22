@@ -55,7 +55,7 @@ async function completeAboutStep(dateOfBirth = '1990-05-15') {
   await completeAccountStep();
   setDateOfBirth(dateOfBirth);
   await continueFromAbout();
-  await screen.findByRole('heading', { name: 'Choose your gender' });
+  await screen.findByRole('heading', { name: 'Gender' });
 }
 
 describe('onboarding', () => {
@@ -220,7 +220,7 @@ describe('onboarding', () => {
       const button = screen.getByRole('button', { name: 'Create my account' });
       expect(button).toBeDisabled();
       expect(button).toHaveAccessibleDescription('Choose a gender to create your account.');
-      expect(screen.getByText(/only changes the figure you see/)).toBeInTheDocument();
+      expect(screen.getByText(/only used for the picture/)).toBeInTheDocument();
     });
 
     it('switches the selected card and enables the button', async () => {
@@ -272,7 +272,7 @@ describe('onboarding', () => {
       await userEvent.click(screen.getByRole('button', { name: 'Back' }));
       await screen.findByRole('heading', { name: 'A little about you' });
       await continueFromAbout();
-      await screen.findByRole('heading', { name: 'Choose your gender' });
+      await screen.findByRole('heading', { name: 'Gender' });
 
       expect(screen.getByRole('radio', { name: 'Female' })).toBeChecked();
     });
@@ -349,7 +349,7 @@ describe('onboarding', () => {
       await createAccount();
 
       expect(await screen.findByRole('alert')).toHaveTextContent('Something went wrong.');
-      expect(screen.getByRole('heading', { name: 'Choose your gender' })).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: 'Gender' })).toBeInTheDocument();
     });
 
     it('celebrates on success with the first name, no progress bar, and a dashboard button', async () => {

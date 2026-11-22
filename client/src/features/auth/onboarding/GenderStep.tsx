@@ -43,9 +43,9 @@ export function GenderStep({
         <StaggerItem>
           <StepHeading
             focusOnMount={focusHeading}
-            description="This only changes the figure you see in the app. You can change it any time."
+            description="We use this to show a figure that feels like you. It is only used for the picture, and you can change it any time."
           >
-            Choose your gender
+            Gender
           </StepHeading>
         </StaggerItem>
         <FormError

@@ -105,6 +105,39 @@ describe('BodyPanel', () => {
     expect(screen.getByRole('radio', { name: 'Female' })).toBeChecked();
   });
 
+  describe('for an account that has not chosen a gender', () => {
+    beforeEach(() => {
+      vi.mocked(authApi.getMe).mockResolvedValue({ ...USER, gender: null });
+    });
+
+    it('shows the neutral figure, selects nothing and asks for a choice', async () => {
+      renderPanel();
+
+      expect(await screen.findByText('Choose a figure')).toBeInTheDocument();
+      expect(screen.getByTestId('gauge')).toHaveTextContent('other:empty');
+      for (const radio of screen.getAllByRole('radio')) expect(radio).not.toBeChecked();
+    });
+
+    it('saves the first choice and drops the hint', async () => {
+      vi.mocked(genderApi.updateGender).mockResolvedValue({ ...USER, gender: 'female' });
+      renderPanel();
+      await screen.findByText('Choose a figure');
+
+      await userEvent.click(screen.getByRole('radio', { name: 'Female' }));
+
+      expect(genderApi.updateGender).toHaveBeenCalledWith('female');
+      expect(screen.getByTestId('gauge')).toHaveTextContent('female:empty');
+      expect(screen.queryByText('Choose a figure')).not.toBeInTheDocument();
+    });
+  });
+
+  it('does not show the hint when a gender is chosen', async () => {
+    renderPanel();
+    await screen.findByText('Add your first reading for this day');
+
+    expect(screen.queryByText('Choose a figure')).not.toBeInTheDocument();
+  });
+
   it('can switch to other', async () => {
     vi.mocked(genderApi.updateGender).mockResolvedValue({ ...USER, gender: 'other' });
     renderPanel();

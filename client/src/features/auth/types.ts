@@ -8,5 +8,6 @@ export interface User {
   email: string;
   role: UserRole;
   dateOfBirth: string | null;
-  gender: Gender;
+  /** Null until the person chooses one (accounts made before gender existed). */
+  gender: Gender | null;
 }

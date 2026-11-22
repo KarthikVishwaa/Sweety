@@ -305,7 +305,7 @@ unreachable.
 ### Auth
 
 `POST /api/auth/register` with `{ "name", "email", "password", "dateOfBirth", "gender" }` returns `201`, sets the cookie and returns the user. The
-password hash is never returned. `gender` is `"male"`, `"female"` or `"other"` and is required for new sign-ups ("Please choose a gender."); the user object
+password hash is never returned. `gender` is `"male"`, `"female"` or `"other"` and is required for new sign-ups (it is `null` for older accounts) ("Please choose a gender."); the user object
 returned by register, login and `/me` includes it. `PATCH /api/users/me` with `{ "gender" }` returns `200 { user }` and only ever changes the caller's own row.
 
 ```json
@@ -580,7 +580,7 @@ Assumptions and limits:
   `client/src/features/body/bodyProportions.ts`. `getBodyGeometry(model)` is the only entry point, so a modelled GLB can replace it.
 - The mesh takes about a quarter to half a second to build, so it runs in a Web Worker and is cached per model. The worker is a
   same-origin module, so the CSP needed no change.
-- `other` is a full option with its own neutral figure (until a modelled one replaces it, the average of the male and female proportions). Existing accounts get `male` (the column default) and can change it from the dashboard.
+- `other` is a full option with its own neutral figure (until a modelled one replaces it, the average of the male and female proportions). Gender is stored only to choose the figure. The column is nullable with no default: accounts made before it existed are `null` until the person chooses, and they see the neutral figure with the hint "Choose a figure" and nothing selected in the switch.
 - Only **one WebGL canvas** is on a page at a time (the dashboard, or the onboarding stage). three.js loads lazily, so the login
   page does not download it. Without WebGL, or if it fails, a flat card with the value, a band badge and a level meter is shown.
 - Rendering pauses when the tab is hidden or the canvas is off screen, and draws on demand under reduced motion.

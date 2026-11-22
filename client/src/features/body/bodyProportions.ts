@@ -1,6 +1,9 @@
 export const GENDERS = ['male', 'female', 'other'] as const;
 export type Gender = (typeof GENDERS)[number];
 
+/** The figure shown to someone who has not chosen one. */
+export const NEUTRAL_GENDER: Gender = 'other';
+
 // Every length is a fraction of the stature S unless a name says otherwise. Adult, about 7.5 heads tall.
 export interface BodyProportions {
   /** Stature in scene units (metres). */

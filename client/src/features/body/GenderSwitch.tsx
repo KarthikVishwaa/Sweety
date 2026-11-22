@@ -4,7 +4,7 @@ import { cn } from '@/lib/utils';
 const LABELS: Record<Gender, string> = { male: 'Male', female: 'Female', other: 'Other' };
 
 interface GenderSwitchProps {
-  value: Gender;
+  value: Gender | null;
   onChange: (model: Gender) => void;
 }
 
