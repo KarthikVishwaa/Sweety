@@ -8,13 +8,14 @@ import { CameraRig } from './CameraRig';
 import { GroundShadow } from './GroundShadow';
 import { StudioEnvironment } from './StudioEnvironment';
 import { useDragRotation } from './useDragRotation';
-import { useIsActive } from './useIsActive';
+import { useIsActive } from '@/hooks/useIsActive';
 
 interface BodyGlucoseSceneProps {
   model: Gender;
   value: number | null;
   reducedMotion: boolean;
   onContextLost: () => void;
+  onContextRestored: () => void;
 }
 
 const MAX_DPR = 2;
@@ -24,6 +25,7 @@ export default function BodyGlucoseScene({
   value,
   reducedMotion,
   onContextLost,
+  onContextRestored,
 }: BodyGlucoseSceneProps) {
   const container = useRef<HTMLDivElement>(null);
   const active = useIsActive(container);
@@ -48,6 +50,7 @@ export default function BodyGlucoseScene({
             event.preventDefault();
             onContextLost();
           });
+          gl.domElement.addEventListener('webglcontextrestored', onContextRestored);
         }}
       >
         <StudioEnvironment />

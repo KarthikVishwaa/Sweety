@@ -23,8 +23,8 @@ export function BodyGlucoseGauge({ model, value, className }: BodyGlucoseGaugePr
   const fallback = <BodyGaugeFallback value={value} />;
 
   return (
-    <div aria-hidden="true" className={cn('h-full w-full', className)}>
-      {webGLSupported && !contextLost ? (
+    <div aria-hidden="true" className={cn('relative h-full w-full', className)}>
+      {webGLSupported ? (
         <BodyGaugeBoundary fallback={fallback}>
           <Suspense fallback={fallback}>
             <BodyGlucoseScene
@@ -32,12 +32,15 @@ export function BodyGlucoseGauge({ model, value, className }: BodyGlucoseGaugePr
               value={value}
               reducedMotion={reducedMotion}
               onContextLost={() => setContextLost(true)}
+              onContextRestored={() => setContextLost(false)}
             />
           </Suspense>
         </BodyGaugeBoundary>
       ) : (
         fallback
       )}
+      {/* The canvas stays mounted while the context is lost, so three.js can rebuild it when the browser restores it. */}
+      {webGLSupported && contextLost && <div className="absolute inset-0">{fallback}</div>}
     </div>
   );
 }

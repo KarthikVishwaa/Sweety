@@ -1,20 +1,15 @@
 import { useReducedMotion } from 'motion/react';
 import { useRef } from 'react';
 import { cn } from '@/lib/utils';
-import {
-  MASCOT_ASPECT_RATIO,
-  MASCOT_LOOPS,
-  MASCOT_SOURCES,
-  type MascotVariant,
-} from './mascot.assets';
-import { useMascotPlayback } from './useMascotPlayback';
+import { MASCOT_ASPECT_RATIO, MASCOT_SOURCES, type MascotVariant } from './mascot.assets';
+import { useLoopingVideo } from './useLoopingVideo';
 
 function MascotVideo({ variant }: { variant: MascotVariant }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const reducedMotion = useReducedMotion() ?? false;
   const { webm, mp4, poster } = MASCOT_SOURCES[variant];
 
-  useMascotPlayback(videoRef, !reducedMotion);
+  useLoopingVideo(videoRef, !reducedMotion);
 
   return (
     <video
@@ -23,7 +18,7 @@ function MascotVideo({ variant }: { variant: MascotVariant }) {
       poster={poster}
       autoPlay={!reducedMotion}
       preload={reducedMotion ? 'none' : 'auto'}
-      loop={MASCOT_LOOPS[variant]}
+      loop
       muted
       playsInline
       disablePictureInPicture
