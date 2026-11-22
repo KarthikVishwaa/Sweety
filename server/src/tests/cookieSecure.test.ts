@@ -1,6 +1,9 @@
 import type { Response } from 'express';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
+// The config reads .env every time it is imported, which would put COOKIE_SECURE back after a test unsets it.
+vi.mock('dotenv', () => ({ default: { config: vi.fn() } }));
+
 async function cookieOptionsUnder(env: { NODE_ENV: string; COOKIE_SECURE?: string }) {
   vi.stubEnv('NODE_ENV', env.NODE_ENV);
   vi.stubEnv('COOKIE_SECURE', env.COOKIE_SECURE);
