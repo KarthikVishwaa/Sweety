@@ -8,6 +8,7 @@ import type { StageContent } from '@/components/layout/AuthStage';
 import { PageSkeleton } from '@/components/layout/PageSkeleton';
 import type { MascotVariant } from '@/components/mascot/mascot.assets';
 import { usePreloadMascot } from '@/components/mascot/preloadMascot';
+import { GENDERS, NEUTRAL_GENDER, type Gender } from '@/features/body/bodyProportions';
 import { usePreloadBody } from '@/features/body/usePreloadBody';
 import {
   ACCOUNT_FIELDS,
@@ -28,26 +29,33 @@ import { ApiError } from '@/lib/api';
 import { applyApiError } from '@/lib/applyApiError';
 import { stepFade, stepSlide } from '@/lib/motion';
 
-type Step = 'account' | 'about' | 'body' | 'welcome';
+type Step = 'account' | 'about' | 'gender' | 'welcome';
 type AccountField = (typeof ACCOUNT_FIELDS)[number];
 
 const PROGRESS_BY_STEP: Record<Exclude<Step, 'welcome'>, ProgressStep> = {
   account: 1,
   about: 2,
-  body: 3,
+  gender: 3,
 };
 const NEXT_MASCOT: Partial<Record<Step, MascotVariant>> = {
   account: 'waving',
-  body: 'bouncing',
+  gender: 'bouncing',
 };
 const TAGLINE_BY_STEP: Record<Step, string> = {
   account: "Let's get you set up. It only takes a minute.",
   about: 'Nice to meet you!',
-  body: 'Pick the figure that feels right for you.',
+  gender: 'Pick the figure that feels right for you.',
   welcome: "You're all set!",
 };
-// An in-range reading, shown once on the body step so the figure visibly fills.
+// An in-range reading, shown once on the gender step so the chosen figure visibly fills.
 const DEMO_GLUCOSE_VALUE = 110;
+// The neutral glass figure is fetched while the date of birth is entered; the other two on the gender step.
+const PRELOAD_BY_STEP: Record<Step, readonly Gender[]> = {
+  account: [],
+  about: [NEUTRAL_GENDER],
+  gender: GENDERS,
+  welcome: [],
+};
 
 export function OnboardingPage() {
   const { data: user, isPending } = useMe();
@@ -64,7 +72,7 @@ export function OnboardingPage() {
   const gender = useWatch({ control: form.control, name: 'gender' });
   const registerAccount = useRegister({ onRegistered: () => goTo('welcome', 1) });
   usePreloadMascot(NEXT_MASCOT[step]);
-  usePreloadBody(step === 'about' || step === 'body');
+  usePreloadBody(PRELOAD_BY_STEP[step]);
 
   function goTo(next: Step, nextDirection: 1 | -1) {
     setDirection(nextDirection);
@@ -78,7 +86,7 @@ export function OnboardingPage() {
   }
 
   async function continueToBody() {
-    if (await form.trigger('dateOfBirth', { shouldFocus: true })) goTo('body', 1);
+    if (await form.trigger('dateOfBirth', { shouldFocus: true })) goTo('gender', 1);
   }
 
   function handleRegistrationError(error: Error) {
@@ -126,7 +134,7 @@ export function OnboardingPage() {
         onContinue={() => void continueToBody()}
         focusHeading
       />
-    ) : step === 'body' ? (
+    ) : step === 'gender' ? (
       <GenderStep
         form={form}
         onBack={() => goTo('about', -1)}
@@ -139,9 +147,11 @@ export function OnboardingPage() {
       <WelcomeStep firstName={firstName} />
     );
 
+  // On the gender step the stage starts as an empty, neutral glass figure; choosing a card cross-fades
+  // to that figure, which then fills once.
   const stage: StageContent =
-    step === 'body' && gender
-      ? { kind: 'body', model: gender, value: DEMO_GLUCOSE_VALUE }
+    step === 'gender'
+      ? { kind: 'body', model: gender ?? NEUTRAL_GENDER, value: gender ? DEMO_GLUCOSE_VALUE : null }
       : {
           kind: 'mascot',
           variant: step === 'account' ? 'floating' : step === 'welcome' ? 'bouncing' : 'waving',
