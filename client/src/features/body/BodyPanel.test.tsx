@@ -1,19 +1,14 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { render, screen, waitFor } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
-import { toast } from 'sonner';
+import { render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import * as authApi from '@/features/auth/authApi';
 import type { User } from '@/features/auth/types';
 import * as readingsApi from '@/features/readings/readingsApi';
 import type { Reading, ReadingSlot } from '@/features/readings/types';
-import * as genderApi from './genderApi';
 import { BodyPanel } from './BodyPanel';
 
 vi.mock('@/features/auth/authApi');
 vi.mock('@/features/readings/readingsApi');
-vi.mock('./genderApi');
-vi.mock('sonner', () => ({ toast: { success: vi.fn(), error: vi.fn() } }));
 vi.mock('./BodyGlucoseGauge', () => ({
   BodyGlucoseGauge: ({ model, value }: { model: string; value: number | null }) => (
     <div data-testid="gauge">{`${model}:${value ?? 'empty'}`}</div>
@@ -92,72 +87,21 @@ describe('BodyPanel', () => {
     expect(screen.getByTestId('gauge')).toHaveTextContent('male:65');
   });
 
-  it('switches the figure at once and saves the choice', async () => {
-    vi.mocked(genderApi.updateGender).mockResolvedValue({ ...USER, gender: 'female' });
+  it("shows the account's own figure and offers no switch on the dashboard", async () => {
+    vi.mocked(authApi.getMe).mockResolvedValue({ ...USER, gender: 'female' });
     renderPanel();
     await screen.findByText('Add your first reading for this day');
-
-    await userEvent.click(screen.getByRole('radio', { name: 'Female' }));
 
     expect(screen.getByTestId('gauge')).toHaveTextContent('female:empty');
-    expect(genderApi.updateGender).toHaveBeenCalledWith('female');
-    await waitFor(() => expect(toast.success).toHaveBeenCalled());
-    expect(screen.getByRole('radio', { name: 'Female' })).toBeChecked();
+    expect(screen.queryByRole('radio')).not.toBeInTheDocument();
+    expect(screen.queryByRole('radiogroup')).not.toBeInTheDocument();
   });
 
-  describe('for an account that has not chosen a gender', () => {
-    beforeEach(() => {
-      vi.mocked(authApi.getMe).mockResolvedValue({ ...USER, gender: null });
-    });
-
-    it('shows the neutral figure, selects nothing and asks for a choice', async () => {
-      renderPanel();
-
-      expect(await screen.findByText('Choose a figure')).toBeInTheDocument();
-      expect(screen.getByTestId('gauge')).toHaveTextContent('other:empty');
-      for (const radio of screen.getAllByRole('radio')) expect(radio).not.toBeChecked();
-    });
-
-    it('saves the first choice and drops the hint', async () => {
-      vi.mocked(genderApi.updateGender).mockResolvedValue({ ...USER, gender: 'female' });
-      renderPanel();
-      await screen.findByText('Choose a figure');
-
-      await userEvent.click(screen.getByRole('radio', { name: 'Female' }));
-
-      expect(genderApi.updateGender).toHaveBeenCalledWith('female');
-      expect(screen.getByTestId('gauge')).toHaveTextContent('female:empty');
-      expect(screen.queryByText('Choose a figure')).not.toBeInTheDocument();
-    });
-  });
-
-  it('does not show the hint when a gender is chosen', async () => {
+  it('shows the neutral figure for an account without a gender', async () => {
+    vi.mocked(authApi.getMe).mockResolvedValue({ ...USER, gender: null });
     renderPanel();
     await screen.findByText('Add your first reading for this day');
-
-    expect(screen.queryByText('Choose a figure')).not.toBeInTheDocument();
-  });
-
-  it('can switch to other', async () => {
-    vi.mocked(genderApi.updateGender).mockResolvedValue({ ...USER, gender: 'other' });
-    renderPanel();
-    await screen.findByText('Add your first reading for this day');
-
-    await userEvent.click(screen.getByRole('radio', { name: 'Other' }));
 
     expect(screen.getByTestId('gauge')).toHaveTextContent('other:empty');
-    expect(genderApi.updateGender).toHaveBeenCalledWith('other');
-  });
-
-  it('puts the figure back and tells the person when saving fails', async () => {
-    vi.mocked(genderApi.updateGender).mockRejectedValue(new Error('Network'));
-    renderPanel();
-    await screen.findByText('Add your first reading for this day');
-
-    await userEvent.click(screen.getByRole('radio', { name: 'Female' }));
-
-    await waitFor(() => expect(toast.error).toHaveBeenCalled());
-    await waitFor(() => expect(screen.getByTestId('gauge')).toHaveTextContent('male:empty'));
-    expect(screen.getByRole('radio', { name: 'Male' })).toBeChecked();
   });
 });

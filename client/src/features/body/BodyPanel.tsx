@@ -2,15 +2,13 @@ import { useMe } from '@/features/auth/useAuth';
 import { NEUTRAL_GENDER } from './bodyProportions';
 import { useReadingsByDate } from '@/features/readings/useReadings';
 import { BodyGlucoseGauge } from './BodyGlucoseGauge';
-import { GenderSwitch } from './GenderSwitch';
 import { bodyCaption, latestReadingOfDay } from './latestReading';
-import { useUpdateGender } from './useUpdateGender';
 
 // The figure for the selected day: it fills to the latest reading and follows every change to the data.
+// Which figure is shown follows the account's gender (the neutral one until a gender is chosen).
 export function BodyPanel({ date }: { date: string }) {
   const { data: user } = useMe();
   const { data: readings, isPending } = useReadingsByDate(date);
-  const updateGender = useUpdateGender();
   const latest = readings ? latestReadingOfDay(readings) : undefined;
 
   if (!user) return null;
@@ -26,8 +24,6 @@ export function BodyPanel({ date }: { date: string }) {
       <p aria-live="polite" className="min-h-5 text-center text-sm font-medium">
         {isPending ? 'Loading readings…' : bodyCaption(latest)}
       </p>
-      <GenderSwitch value={user.gender} onChange={(model) => updateGender.mutate(model)} />
-      {!user.gender && <p className="text-sm text-muted-foreground">Choose a figure</p>}
     </section>
   );
 }

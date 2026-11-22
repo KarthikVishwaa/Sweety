@@ -1,8 +1,10 @@
-import { LogOut } from 'lucide-react';
+import { useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import { Logo } from '@/components/layout/Logo';
-import { Button, buttonVariants } from '@/components/ui/button';
-import { useLogout } from '@/features/auth/useAuth';
+import { UserMenu } from '@/components/layout/UserMenu';
+import { buttonVariants } from '@/components/ui/button';
+import { useLogout, useMe } from '@/features/auth/useAuth';
+import { ProfileDialog } from '@/features/profile/ProfileDialog';
 import { cn } from '@/lib/utils';
 
 const NAV_ITEMS = [
@@ -12,6 +14,8 @@ const NAV_ITEMS = [
 
 export function AppHeader({ heading }: { heading: string }) {
   const logout = useLogout();
+  const { data: user } = useMe();
+  const [profileOpen, setProfileOpen] = useState(false);
 
   return (
     <header className="flex flex-wrap items-center justify-between gap-3">
@@ -32,11 +36,16 @@ export function AppHeader({ heading }: { heading: string }) {
             {label}
           </NavLink>
         ))}
-        <Button variant="outline" onClick={() => logout.mutate()} disabled={logout.isPending}>
-          <LogOut aria-hidden="true" />
-          Logout
-        </Button>
+        {user && (
+          <UserMenu
+            name={user.name}
+            onProfile={() => setProfileOpen(true)}
+            onLogout={() => logout.mutate()}
+            loggingOut={logout.isPending}
+          />
+        )}
       </nav>
+      <ProfileDialog open={profileOpen} onOpenChange={setProfileOpen} />
     </header>
   );
 }

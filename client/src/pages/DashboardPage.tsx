@@ -2,6 +2,7 @@ import { AppHeader } from '@/components/layout/AppHeader';
 import { AppShell } from '@/components/layout/AppShell';
 import { useMe } from '@/features/auth/useAuth';
 import { BodyPanel } from '@/features/body/BodyPanel';
+import { ChooseFigureDialog } from '@/features/body/ChooseFigureDialog';
 import { DateNavigator } from '@/features/readings/components/DateNavigator';
 import { ReadingDialogs } from '@/features/readings/components/ReadingDialogs';
 import { ReadingsSection } from '@/features/readings/components/ReadingsSection';
@@ -35,6 +36,7 @@ export function DashboardPage() {
         </main>
       </div>
       <ReadingDialogs dialogs={dialogs} defaultDate={date} />
+      <ChooseFigureDialog />
     </AppShell>
   );
 }
