@@ -1,25 +1,28 @@
 # Sweety
 
-Sweety is a blood glucose tracker. A patient signs up, logs up to four readings a day (morning fasting, after breakfast,
-after lunch, after dinner) and reviews them as a daily summary, a month-to-date report with a chart, and a previous-month
-report. The backend is Node, Express and PostgreSQL, the frontend is React, and both live in one npm workspaces monorepo.
+Sweety is a blood glucose tracker. A person signs up, logs up to four readings a day (morning fasting, after breakfast,
+after lunch, after dinner) and reviews them as a daily summary, a month-to-date report with a chart, a previous-month report,
+and a profile page with insights for any month. A 3D body figure fills like a glass of liquid to show where a reading sits.
+The backend is Node, Express and PostgreSQL, the frontend is React, and both live in one npm workspaces monorepo.
 
 ## Table of contents
 
 1. [Screenshots](#screenshots)
-2. [Features](#features)
-3. [Tech stack and architecture](#tech-stack-and-architecture)
-4. [Prerequisites and quick start](#prerequisites-and-quick-start)
-5. [Docker quick start](#docker-quick-start)
-6. [Environment variables](#environment-variables)
-7. [Database and migrations](#database-and-migrations)
-8. [Running the tests](#running-the-tests)
-9. [API reference](#api-reference)
-10. [Validation rules](#validation-rules)
-11. [Report definitions](#report-definitions)
-12. [Security notes](#security-notes)
-13. [Notes](#notes)
-14. [Credits](#credits)
+2. [Demo video](#demo-video)
+3. [Features](#features)
+4. [Tech stack and architecture](#tech-stack-and-architecture)
+5. [Prerequisites and quick start](#prerequisites-and-quick-start)
+6. [Docker quick start](#docker-quick-start)
+7. [Environment variables](#environment-variables)
+8. [Database and migrations](#database-and-migrations)
+9. [Running the tests](#running-the-tests)
+10. [API reference](#api-reference)
+11. [Validation rules](#validation-rules)
+12. [Report definitions](#report-definitions)
+13. [Insight definitions](#insight-definitions)
+14. [Security notes](#security-notes)
+15. [Notes](#notes)
+16. [Credits and license](#credits-and-license)
 
 ## Screenshots
 
@@ -54,6 +57,10 @@ It uses Playwright with Chromium (install it once with `npx playwright install c
 are root dev dependencies and are not part of the app, the Docker images or CI. It will not run with `NODE_ENV=production`,
 signs up throwaway `shots+<time>@example.com` accounts and deletes them when it finishes, and only reads the demo account.
 
+## Demo video
+
+A short walkthrough video will be linked here: [demo video, link to be added](#demo-video).
+
 ## Features
 
 **Core**
@@ -79,10 +86,12 @@ signs up throwaway `shots+<time>@example.com` accounts and deletes them when it 
 - [x] Idempotent demo seed (`npm run seed`) with a demo account
 - [x] GitHub Actions CI (lint, format check, build, tests against PostgreSQL 16)
 - [x] Reduced-motion support and keyboard-visible focus (see [Notes](#notes))
+- [x] A 3D body gauge (three.js) in three figures, built by this repository's own generator, with a flat fallback when WebGL is missing
+- [x] A screenshot tool (`npm run screenshots`) that retakes every image in `docs/screenshots/`
 
 **Not implemented**
 
-- [ ] Redis caching, BullMQ background jobs, a doctor role with doctor features and a 3D gauge. `ioredis` and `bullmq` are installed and `REDIS_URL` is required, but no code uses Redis yet. The `users.role` column allows `doctor`, but every account is a `patient`.
+- [ ] Redis caching, BullMQ background jobs and a doctor role with doctor features. `ioredis` and `bullmq` are installed and `REDIS_URL` is required, but no code uses Redis yet. The `users.role` column allows `doctor`, but every account is a `patient`.
 
 ## Tech stack and architecture
 
@@ -92,9 +101,10 @@ signs up throwaway `shots+<time>@example.com` accounts and deletes them when it 
 | Database | PostgreSQL 16, migrations with node-pg-migrate                                                            |
 | Client   | React 19, Vite 8, Tailwind CSS 4, shadcn/ui on Base UI, React Router 7, TanStack Query 5, React Hook Form |
 | Charts   | Recharts 3                                                                                                |
+| 3D       | three.js and React Three Fiber; the figures are baked by a Node generator (glTF Transform, meshoptimizer) |
 | Motion   | Motion 14, NumberFlow, AutoAnimate                                                                        |
 | Tests    | Vitest, Supertest (server), React Testing Library and user-event (client)                                 |
-| Tooling  | ESLint (flat config), Prettier, husky and lint-staged, GitHub Actions                                     |
+| Tooling  | ESLint (flat config), Prettier, husky and lint-staged, GitHub Actions, Playwright and sharp (screenshots) |
 
 The server is layered per feature. A route validates input and calls a controller, the controller handles HTTP only, the
 service holds the rules, and the repository holds the SQL (always parameterised). One error handler turns everything into
@@ -107,10 +117,14 @@ sweety/
 ├─ docker-compose.yml      postgres + redis, and server + client behind the "full" profile
 ├─ .env.example            every environment variable, documented
 ├─ .github/workflows/      ci.yml
-├─ docs/screenshots/       screenshots to add (see its README)
+├─ docs/screenshots/       the screenshots and how they are made
+├─ scripts/
+│  ├─ media/, optimize-media.mjs   turns the original mascot videos and logo into web assets
+│  ├─ models/              bakes the three 3D figures into GLB files
+│  └─ screenshots/         captures docs/screenshots with Playwright
 ├─ server/
 │  ├─ Dockerfile, docker-entrypoint.sh
-│  ├─ migrations/          users and readings tables
+│  ├─ migrations/          users, readings, date of birth and gender
 │  ├─ scripts/seed.ts      thin CLI wrapper for the demo seed
 │  └─ src/
 │     ├─ app.ts, server.ts
@@ -118,16 +132,19 @@ sweety/
 │     ├─ db/               pg pool
 │     ├─ lib/, utils/      AppError, logger, schema parsing, date helpers
 │     ├─ middleware/       error handler, rate limiters, validate
-│     ├─ modules/          auth, readings, reports, health (routes, controller, service, repository, schemas)
+│     ├─ modules/          auth, users, readings, reports, insights, health
+│     │                    (routes, controller, service, repository, schemas)
 │     ├─ seed/             demo data generator and seed function
 │     └─ tests/            Vitest and Supertest tests
 └─ client/
    ├─ Dockerfile, nginx.conf
    └─ src/
       ├─ app/              providers and router
-      ├─ components/       ui (shadcn), layout, form
-      ├─ features/         auth, readings, reports (api, hooks, schemas, components)
-      ├─ pages/            Login, Signup, Dashboard, History, NotFound
+      ├─ assets/           mascot videos, logo and the baked 3D figures
+      ├─ components/       ui (shadcn), layout, form, mascot, motion
+      ├─ features/         auth, readings, reports, insights, profile, body (api, hooks, schemas, components)
+      │  └─ body/generator the code that builds the 3D figures (not part of the app bundle)
+      ├─ pages/            Login, Onboarding, Dashboard, History, Profile, NotFound
       ├─ hooks/, lib/      shared hooks, API client, date and motion helpers
       └─ test/             test setup
 ```
@@ -245,7 +262,8 @@ Migrations live in `server/migrations` and run with `npm run db:migrate` (the Do
 working `down`.
 
 **`users`**: `id` (uuid, generated), `name`, `email`, `password_hash`, `role` (`patient` or `doctor`, default `patient`),
-`created_at`. A unique index on `lower(email)` makes emails unique regardless of letter case.
+`date_of_birth` (a `date`, empty for accounts made before it was asked), `gender` (`male`, `female` or `other`, empty until
+chosen) and `created_at`. A unique index on `lower(email)` makes emails unique regardless of letter case.
 
 **`readings`**: `id` (uuid, generated), `user_id` (references `users`, deleted with the user), `reading_date` (a `date`),
 `slot` (`morning_fasting`, `after_breakfast`, `after_lunch` or `after_dinner`), `value` (integer, 40 to 600),
@@ -270,27 +288,33 @@ npm run verify            # lint, format check, build and tests
 
 Server tests need PostgreSQL (`npm run db:up`). They use a separate `sweety_test` database on the same server: a global setup
 creates it if needed and applies the real migrations, and each test starts with `TRUNCATE users CASCADE`. Your development
-database is never touched. Current totals: 143 server tests and 38 client tests.
+database is never touched. Current totals: 260 server tests and 265 client tests. The tables list the main files, not every one.
 
-| Where  | File                         | Covers                                                                                     |
-| ------ | ---------------------------- | ------------------------------------------------------------------------------------------ |
-| server | `auth.test.ts`               | register, login, logout, `/me`, hashed passwords, duplicate emails, identical 401s         |
-| server | `readings.test.ts`           | create, update, delete, every validation rule and message, IST "today", per-user isolation |
-| server | `readingsPagination.test.ts` | page and limit defaults, ordering, out-of-range pages, invalid values, isolation           |
-| server | `reports.test.ts`            | report maths and rounding, date ranges end to end, empty state, isolation, validation      |
-| server | `reportRange.test.ts`        | the date-range helper (January, leap years, month ends)                                    |
-| server | `date.test.ts`               | the IST "today" helper around midnight, calendar-date checks                               |
-| server | `seed.test.ts`               | seed idempotency, rules, other users untouched, production guard                           |
-| server | `cookieSecure.test.ts`       | the `COOKIE_SECURE` flag and its defaults                                                  |
-| server | `envExample.test.ts`         | `.env.example` lists exactly the variables the server reads                                |
-| server | `health.test.ts`             | health endpoint, 404 shape, no `x-powered-by`                                              |
-| client | `LoginPage.test.tsx`         | login form validation and submission                                                       |
-| client | `ReadingDialog.test.tsx`     | add and edit form: validation, boundaries, server errors on the right field, pending state |
-| client | `ReportsSection.test.tsx`    | report values and badges, tab switching, empty state, error and retry                      |
-| client | `HistoryPage.test.tsx`       | pagination, URL parameters, fallbacks, empty state                                         |
-| client | `useReadings.test.tsx`       | reading changes refresh the reports and readings queries                                   |
-| client | `useAuth.test.tsx`           | cached user data is discarded on login and logout                                          |
-| client | `readings.constants.test.ts` | glucose band boundaries                                                                    |
+| Where  | File                           | Covers                                                                                         |
+| ------ | ------------------------------ | ---------------------------------------------------------------------------------------------- |
+| server | `auth.test.ts`                 | register, login, logout, `/me`, hashed passwords, duplicate emails, identical 401s             |
+| server | `readings.test.ts`             | create, update, delete, every validation rule and message, IST "today", per-user isolation     |
+| server | `readingsPagination.test.ts`   | page and limit defaults, ordering, out-of-range pages, invalid values, isolation               |
+| server | `reports.test.ts`              | report maths and rounding, date ranges end to end, empty state, isolation, validation          |
+| server | `reportRange.test.ts`          | the date-range helper (January, leap years, month ends)                                        |
+| server | `date.test.ts`                 | the IST "today" helper around midnight, calendar-date checks                                   |
+| server | `insights.test.ts`             | the month insights end to end: bands, streaks, comparison, boundaries, isolation               |
+| server | `insightsCalculations.test.ts` | rounding, streak and comparison functions on their own                                         |
+| server | `users.test.ts`                | changing name, gender and date of birth, and what it must not change                           |
+| server | `seed.test.ts`                 | seed idempotency, rules, other users untouched, production guard                               |
+| server | `cookieSecure.test.ts`         | the `COOKIE_SECURE` flag and its defaults                                                      |
+| server | `envExample.test.ts`           | `.env.example` lists exactly the variables the server reads                                    |
+| server | `health.test.ts`               | health endpoint, 404 shape, no `x-powered-by`                                                  |
+| client | `LoginPage.test.tsx`           | login form validation and submission                                                           |
+| client | `ReadingDialog.test.tsx`       | add and edit form: validation, boundaries, server errors on the right field, pending state     |
+| client | `ReportsSection.test.tsx`      | report values and badges, tab switching, empty state, error and retry                          |
+| client | `HistoryPage.test.tsx`         | pagination, URL parameters, fallbacks, empty state                                             |
+| client | `useReadings.test.tsx`         | reading changes refresh the reports and readings queries                                       |
+| client | `useAuth.test.tsx`             | cached user data is discarded on login and logout                                              |
+| client | `readings.constants.test.ts`   | glucose band boundaries                                                                        |
+| client | `ProfilePage.test.tsx`         | the profile page: details, month picker, empty and error states, editing with rollback         |
+| client | `bodyModels.test.ts`           | the committed 3D figures stay watertight, symmetric, in proportion and smooth at the shoulders |
+| client | `useLoopingVideo.test.tsx`     | the mascot video keeps playing: restart, retry, stall recovery                                 |
 
 ## API reference
 
@@ -718,7 +742,7 @@ morning), and the meaning is always given as text under it ("After lunch, 182 mg
   dismissible, one-time "Choose a figure" dialog, which never returns once a gender is saved (a dismissed one may return after a
   reload or the next login).
 
-**How the figures are made.** The three figures (`male`, `female`, `other`) are original: they are generated by this repository's
+**How the figures are made.** The three figures (`male`, `female`, `other`) are original: they are produced by this repository's
 own code, with no scanned, purchased or third-party model involved, so no attribution or licence is needed for them.
 
 1. `client/src/features/body/bodyProportions.ts` holds one typed table per gender: landmark heights as fractions of the stature
@@ -864,9 +888,11 @@ The profile page only describes the readings a person logged. It deliberately ha
   `node-pg-migrate`, so I left it. `node-pg-migrate` is also a runtime dependency of the Docker image, so it is worth updating
   once a release with fixed dependencies exists.
 
-## Credits
+## Credits and license
 
-- The body figures are generated by this project's code (see "How the figures are made"); no third-party models are used.
+Sweety is released under the [MIT License](LICENSE), copyright Karthik R.
+
+- The body figures are built by this project's code (see "How the figures are made"); no third-party models are used.
 - [three.js](https://threejs.org) (MIT), including `GLTFLoader`, `RoomEnvironment` and the meshopt decoder from its examples, and
   [React Three Fiber](https://r3f.docs.pmnd.rs) (MIT) render the figure.
 - [glTF Transform](https://gltf-transform.dev) (MIT) and [meshoptimizer](https://github.com/zeux/meshoptimizer) (MIT) bake and

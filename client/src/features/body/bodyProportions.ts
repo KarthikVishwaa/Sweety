@@ -1,7 +1,6 @@
 export const GENDERS = ['male', 'female', 'other'] as const;
 export type Gender = (typeof GENDERS)[number];
 
-/** The figure shown to someone who has not chosen one. */
 export const NEUTRAL_GENDER: Gender = 'other';
 
 /**
@@ -167,7 +166,6 @@ const FEMALE: BodyProportions = {
   chestContour: 1,
 };
 
-// The neutral figure sits exactly halfway between the two, measurement by measurement.
 function average(first: BodyProportions, second: BodyProportions): BodyProportions {
   const entries = Object.keys(first).map((key) => {
     const name = key as keyof BodyProportions;

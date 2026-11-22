@@ -177,7 +177,6 @@ function footLength(positions: ArrayLike<number>, toeOut: number): number {
   return high - low;
 }
 
-/** Measures a figure at unit height: topology, orientation, symmetry and its main proportions. */
 export function measureBodyMesh(
   positions: ArrayLike<number>,
   indices: ArrayLike<number>,
@@ -211,7 +210,6 @@ export function measureBodyMesh(
   };
 }
 
-/** Everything that is wrong with a figure; an empty list means it passes. */
 export function bodyMeshProblems(report: BodyMeshReport, proportions: BodyProportions): string[] {
   const problems: string[] = [];
   const check = (ok: boolean, message: string) => {

@@ -26,7 +26,6 @@ const FINGERS: Finger[] = [
   { across: -0.74, lengths: [0.02, 0.0115, 0.011] },
 ];
 
-// Three sections that curl a little more at each joint, so the finger reads as a relaxed hook.
 function finger(start: Vec3, direction: Vec3, curl: Vec3, lengths: Finger['lengths']): Part[] {
   const parts: Part[] = [];
   let from = start;
@@ -48,8 +47,6 @@ function finger(start: Vec3, direction: Vec3, curl: Vec3, lengths: Finger['lengt
   return parts;
 }
 
-// A relaxed hand hanging beside the thigh with the palm turned slightly inward: a flat palm with a
-// thumb pad, four slightly fanned fingers that curl towards the palm, and a thumb in two sections.
 export function handParts(p: BodyProportions, side: Side, wrist: Vec3, forearm: Vec3): Part[] {
   const hand = normalize(add(forearm, [0, -0.12, 0]));
   const facing = rotateY([0, 0, 1], -side * radians(15));

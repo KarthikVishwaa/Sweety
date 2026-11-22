@@ -5,7 +5,6 @@ import { Logo } from '@/components/layout/Logo';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { fadeUp } from '@/lib/motion';
 
-// From lg up the forms grow with the screen: taller fields and buttons, and body text one step larger.
 const LARGE_FORM =
   'lg:p-6 lg:[&_button]:h-11 lg:[&_button]:text-base lg:[&_input]:h-11 lg:[&_input]:text-base lg:[&_label]:text-base lg:[&_p]:text-base';
 

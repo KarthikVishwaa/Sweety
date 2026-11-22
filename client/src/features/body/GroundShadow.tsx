@@ -20,7 +20,6 @@ function createShadowTexture(): CanvasTexture {
   return new CanvasTexture(canvas);
 }
 
-// A soft ellipse under the feet, drawn as a radial-gradient disc.
 export function GroundShadow() {
   const [texture] = useState(createShadowTexture);
   useEffect(() => () => texture.dispose(), [texture]);

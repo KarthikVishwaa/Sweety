@@ -17,6 +17,8 @@ function daysInMonth(year: number, month: number): number {
   return new Date(Date.UTC(year, month, 0)).getUTCDate();
 }
 
+// Works on plain YYYY-MM-DD strings with UTC calendar arithmetic, so a range never depends on the
+// server's own time zone or on daylight saving.
 export function reportRange(type: ReportType, selectedDate: string): DateRange {
   const { year, month } = parts(selectedDate);
 

@@ -2,7 +2,6 @@ import { useEffect } from 'react';
 import type { Gender } from './bodyProportions';
 import { useWebGLSupport } from './useWebGLSupport';
 
-// Fetches the 3D code and the given figures in the background, so the next screen shows them at once.
 export function usePreloadBody(genders: readonly Gender[]): void {
   const supported = useWebGLSupport();
   const key = genders.join(',');

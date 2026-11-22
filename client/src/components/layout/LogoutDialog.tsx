@@ -16,7 +16,6 @@ interface LogoutDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
-// Asks before signing out, so a stray click on the menu does not end the session.
 export function LogoutDialog({ open, onOpenChange }: LogoutDialogProps) {
   const logout = useLogout();
 

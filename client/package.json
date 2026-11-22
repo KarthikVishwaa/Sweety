@@ -1,5 +1,9 @@
 {
   "name": "@sweety/client",
+  "version": "1.0.0",
+  "description": "Sweety web app: React, Vite and TypeScript.",
+  "author": "Karthik R",
+  "license": "MIT",
   "private": true,
   "type": "module",
   "dependencies": {

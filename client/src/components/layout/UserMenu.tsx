@@ -12,7 +12,6 @@ interface UserMenuProps {
 const ITEM =
   'flex cursor-default items-center gap-2 rounded-md px-2 py-1.5 outline-none select-none data-[disabled]:opacity-50 data-[highlighted]:bg-muted [&_svg]:size-4';
 
-// The account menu in the header: the profile (where the figure can be changed) and logging out.
 export function UserMenu({ name, onProfile, onLogout }: UserMenuProps) {
   const firstName = name.trim().split(/\s+/)[0] ?? name;
 

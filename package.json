@@ -1,5 +1,9 @@
 {
   "name": "sweety",
+  "version": "1.0.0",
+  "description": "Sweety: a blood glucose tracker with four daily readings, reports, month insights and a 3D body gauge.",
+  "author": "Karthik R",
+  "license": "MIT",
   "private": true,
   "type": "module",
   "workspaces": [

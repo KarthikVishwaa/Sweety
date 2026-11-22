@@ -11,7 +11,6 @@ interface ProfileFigureProps {
   period: string;
 }
 
-// The one 3D figure of the page: it fills to the average of the chosen month, in the account's gender.
 export function ProfileFigure({ gender, average, pending, period }: ProfileFigureProps) {
   return (
     <section

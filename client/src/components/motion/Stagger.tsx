@@ -7,7 +7,6 @@ interface StaggerProps {
   children: ReactNode;
 }
 
-// Children wrapped in StaggerItem enter one after another (about 60 ms apart) when the group appears.
 export function StaggerGroup({ className, children }: StaggerProps) {
   const reducedMotion = useReducedMotion();
 

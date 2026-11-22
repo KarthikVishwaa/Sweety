@@ -37,7 +37,6 @@ function toFloatGeometry(source: BufferGeometry, mesh: Mesh): BufferGeometry {
   return geometry;
 }
 
-/** Decodes a baked body figure (meshopt-compressed GLB) into a single, plain BufferGeometry. */
 export async function parseBodyGlb(data: ArrayBuffer): Promise<BufferGeometry> {
   await MeshoptDecoder.ready;
   const loader = new GLTFLoader().setMeshoptDecoder(MeshoptDecoder);

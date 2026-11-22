@@ -54,7 +54,6 @@ export const shake: Variants = {
 
 export const ENTRANCE_DURATION = 0.35;
 
-// Elements of a screen rise into place one after another.
 export const riseIn: Variants = {
   hidden: { opacity: 0, y: 12 },
   visible: { opacity: 1, y: 0, transition: { duration: ENTRANCE_DURATION, ease: EASE_OUT } },
@@ -71,7 +70,6 @@ export const popIn: Variants = {
   visible: { opacity: 1, scale: 1, transition: { type: 'spring', stiffness: 220, damping: 20 } },
 };
 
-// One stage content replaces another while they overlap.
 export const stageSwap: Variants = {
   hidden: { opacity: 0, scale: 0.96 },
   visible: { opacity: 1, scale: 1, transition: { duration: ENTRANCE_DURATION, ease: EASE_OUT } },

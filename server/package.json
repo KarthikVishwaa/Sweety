@@ -1,5 +1,9 @@
 {
   "name": "@sweety/server",
+  "version": "1.0.0",
+  "description": "Sweety API: Express, TypeScript and PostgreSQL.",
+  "author": "Karthik R",
+  "license": "MIT",
   "private": true,
   "type": "module",
   "dependencies": {

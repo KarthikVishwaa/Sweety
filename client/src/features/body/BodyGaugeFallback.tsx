@@ -2,7 +2,6 @@ import { GlucoseBadge } from '@/features/readings/components/GlucoseBadge';
 import { cn } from '@/lib/utils';
 import { glucoseBandColor, glucoseToFill } from './glucoseLevel';
 
-// Shown while the 3D figure loads, or when WebGL is missing or fails: the same information, flat.
 export function BodyGaugeFallback({
   value,
   className,

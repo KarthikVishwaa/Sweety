@@ -19,6 +19,7 @@ import { usersRouter } from './modules/users/users.routes.js';
 export const app = express();
 
 app.disable('x-powered-by');
+// Behind the bundled nginx the real client address is in X-Forwarded-For, and the rate limiter needs it.
 app.set('trust proxy', env.TRUST_PROXY);
 
 app.use(pinoHttp({ logger }));

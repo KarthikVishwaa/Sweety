@@ -50,7 +50,6 @@ function InsightBlocks({ insights }: { insights: Insights }) {
   );
 }
 
-// The month picker and everything the chosen month shows, with its loading, empty and error states.
 export function InsightsSection({ month, isCurrent, onMonthChange }: InsightsSectionProps) {
   const { data, isPending, isError, error, refetch } = useInsights(month);
 

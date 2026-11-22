@@ -24,6 +24,7 @@ export function signAuthToken(user: User): { token: string; maxAgeMs: number } {
 
 export function verifyAuthToken(token: string): { userId: string } | undefined {
   try {
+    // The algorithm is pinned: a token must not be able to choose how it is verified.
     const payload = payloadSchema.parse(
       jwt.verify(token, env.JWT_SECRET, { algorithms: [ALGORITHM] }),
     );

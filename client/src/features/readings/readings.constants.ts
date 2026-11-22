@@ -20,6 +20,7 @@ export const MAX_READINGS_PER_DAY = SLOT_KEYS.length;
 export const MIN_GLUCOSE_VALUE = 40;
 export const MAX_GLUCOSE_VALUE = 600;
 
+// Display hints only: the API stores any value from 40 to 600 and never classifies it.
 export const GLUCOSE_THRESHOLDS = { low: 70, high: 180 } as const;
 
 export type GlucoseBandKey = 'low' | 'in-range' | 'high';

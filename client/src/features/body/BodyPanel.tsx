@@ -4,8 +4,6 @@ import { useReadingsByDate } from '@/features/readings/useReadings';
 import { BodyGlucoseGauge } from './BodyGlucoseGauge';
 import { bodyCaption, latestReadingOfDay } from './latestReading';
 
-// The figure for the selected day: it fills to the latest reading and follows every change to the data.
-// Which figure is shown follows the account's gender (the neutral one until a gender is chosen).
 export function BodyPanel({ date }: { date: string }) {
   const { data: user } = useMe();
   const { data: readings, isPending } = useReadingsByDate(date);

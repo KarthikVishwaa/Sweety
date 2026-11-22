@@ -17,6 +17,7 @@ export const globalLimiter = rateLimit({
   handler: tooManyRequests,
 });
 
+// Login and register get a much lower limit than the rest of the API, to slow down password guessing.
 export const authLimiter = rateLimit({
   windowMs: FIFTEEN_MINUTES_MS,
   limit: 20,

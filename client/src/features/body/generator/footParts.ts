@@ -11,9 +11,6 @@ const HEEL_TO_ANKLE = 0.04;
 /** Every part of the sole dips this far below the ground, so cutting at y = 0 leaves a flat sole. */
 const SOLE_DIP = 0.003;
 
-// A foot: a rounded heel, a high instep, a forefoot that is widest at the ball (72 per cent of the
-// length) and a rounded toe box whose big-toe edge stays straighter. The medial arch is carved out
-// of the underside, and the toes turn outward.
 export function footParts(p: BodyProportions, side: Side): Part[] {
   const length = p.footLength;
   const turn = side * radians(p.toeOut);

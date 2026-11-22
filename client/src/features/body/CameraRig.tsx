@@ -4,7 +4,6 @@ import type { PerspectiveCamera } from 'three';
 import { FRAME_HEIGHT } from './bodyScene.constants';
 import { fitDistance } from './cameraFit';
 
-// Moves the camera back until the whole figure fits, whatever the shape of the container.
 export function CameraRig() {
   const camera = useThree((state) => state.camera) as PerspectiveCamera;
   const width = useThree((state) => state.size.width);

@@ -1,7 +1,6 @@
 import type { BodyProportions } from '../bodyProportions.ts';
 import { ellipsoid, roundCone, type Part } from './sdf.ts';
 
-// A faceless head: an egg-shaped cranium that is a little deeper at the back, a tapered jaw and chin.
 export function headParts(p: BodyProportions): Part[] {
   const top = p.chinY + p.headHeight;
   return [

@@ -10,7 +10,6 @@ type Side = 1 | -1;
 /** A wide blend where the upper arm meets the ribcage, so the armpit is a soft fold and not a crease. */
 const ARMPIT_BLEND = 0.04;
 
-/** The shoulder joint and the direction of the upper arm, which the deltoid is aligned with. */
 export function armFrame(p: BodyProportions, side: Side) {
   const angle = radians(p.armAngle);
   // The joint sits a little behind the middle of the ribcage, so the arm hangs beside it, not in front of it.
@@ -20,7 +19,6 @@ export function armFrame(p: BodyProportions, side: Side) {
   return { shoulder, upper };
 }
 
-// Arms hang a little away from the torso with a relaxed bend at the elbow.
 export function armParts(p: BodyProportions, side: Side): Part[] {
   const angle = radians(p.armAngle);
   const { shoulder, upper } = armFrame(p, side);

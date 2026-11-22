@@ -4,6 +4,7 @@ export const TIME_ZONE = 'Asia/Kolkata';
 
 const ISO_DATE_PATTERN = /^(\d{4})-(\d{2})-(\d{2})$/;
 
+// The same Asia/Kolkata calendar day the server uses, so the date picker and the API agree about "today".
 export function todayInIST(now: Date = new Date()): string {
   return new Intl.DateTimeFormat('en-CA', {
     timeZone: TIME_ZONE,

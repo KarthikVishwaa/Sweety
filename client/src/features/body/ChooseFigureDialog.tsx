@@ -17,7 +17,6 @@ import { GENDER_HELP, GenderCards } from './GenderCards';
 // a reload or the next login, but never once a gender has been saved.
 const dismissed = new Set<string>();
 
-// A one-time prompt for accounts made before gender existed, which otherwise see the neutral figure.
 export function ChooseFigureDialog() {
   const { data: user } = useMe();
   const updateProfile = useUpdateProfile();

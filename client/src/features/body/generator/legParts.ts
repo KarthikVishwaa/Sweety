@@ -12,8 +12,6 @@ export const ankleCentre = (p: BodyProportions, side: Side): Vec3 => [
   -0.012,
 ];
 
-// Thigh tapering to a narrower knee with a slight kneecap swell, a calf that bulges at the back in its upper third,
-// a slim shin and an ankle that is clearly narrower than the calf, with subtle ankle bones.
 export function legParts(p: BodyProportions, side: Side): Part[] {
   const start: Vec3 = [side * (p.hipWidth / 4), p.hipJointY + 0.012, -0.004];
   const ankle = ankleCentre(p, side);
