@@ -2,7 +2,6 @@
   "clips": {
     "floating": {
       "seam": "trim",
-      "loop": true,
       "frames": 53,
       "bytes": {
         "mp4": 103202,
@@ -12,7 +11,6 @@
     },
     "waving": {
       "seam": "interpolate",
-      "loop": true,
       "frames": 55,
       "bytes": {
         "mp4": 99464,
@@ -22,7 +20,6 @@
     },
     "bouncing": {
       "seam": "trim",
-      "loop": true,
       "frames": 58,
       "bytes": {
         "mp4": 202504,
@@ -31,12 +28,11 @@
       }
     },
     "love": {
-      "seam": "once",
-      "loop": false,
-      "frames": 72,
+      "seam": "pingpong",
+      "frames": 142,
       "bytes": {
-        "mp4": 147932,
-        "webm": 99360,
+        "mp4": 280394,
+        "webm": 187417,
         "poster": 17322
       }
     }

@@ -8,13 +8,13 @@ import { assessLoop, findBestLoop, meanSquaredError } from './loops.mjs';
 // - trim: a pair of frames in the clip forms a seamless seam, so the clip is cut to that pair.
 // - interpolate: no pair is good enough, so motion-compensated frames bridge the gap. Only used where the
 //   result was inspected and has no ghosting (the pose barely changes across the seam).
-// - once: the clip has no repeating motion (and interpolating it smears the arms), so it plays once and
-//   rests on its last frame instead of looping.
+// - pingpong: the clip has no repeating motion (and interpolating it smears the arms), so it plays forwards and
+//   then backwards. The turning points are single frames, so nothing is blended and the loop has no seam.
 export const CLIPS = [
   { name: 'floating', source: '1.mp4', seam: 'trim' },
   { name: 'waving', source: '2.mp4', seam: 'interpolate' },
   { name: 'bouncing', source: '3.mp4', seam: 'trim' },
-  { name: 'love', source: '4.mp4', seam: 'once' },
+  { name: 'love', source: '4.mp4', seam: 'pingpong' },
 ];
 
 // A band of the 1080x1920 source that contains every pixel of every clip, with a margin.
@@ -36,6 +36,15 @@ const outputAnalysisFilter = `scale=${ANALYSIS.width}:${ANALYSIS.height}:flags=a
 
 function trimFilter({ start, end }) {
   return `[0:v]trim=start_frame=${start}:end_frame=${end + 1},setpts=PTS-STARTPTS,${baseFilter}[v]`;
+}
+
+// The clip followed by itself in reverse, without repeating the two turning frames.
+function pingPongFilter(frames) {
+  return (
+    `[0:v]trim=end_frame=${frames},setpts=PTS-STARTPTS,${baseFilter},split[forward][back];` +
+    `[back]reverse,trim=start_frame=1:end_frame=${frames - 1},setpts=PTS-STARTPTS[reversed];` +
+    `[forward][reversed]concat=n=2:v=1:a=0[v]`
+  );
 }
 
 function encodeArgs(inputArgs, filter) {
@@ -159,7 +168,7 @@ export async function optimizeMascots({ sourceDir, outputDir, checkDir }) {
       };
 
       let loop = { start: 0, end: info.frames - 1 };
-      if (seam !== 'once') {
+      if (seam !== 'pingpong') {
         const frames = await decodeGrayFrames(sourcePath, analysisFilter, ANALYSIS);
         loop = findBestLoop(frames, { fps: info.fps, ...LOOP_SEARCH });
       }
@@ -175,6 +184,8 @@ export async function optimizeMascots({ sourceDir, outputDir, checkDir }) {
           `[0:v]trim=end_frame=${frameCount},format=yuv420p[v]`,
           outputs,
         );
+      } else if (seam === 'pingpong') {
+        await encode(['-i', sourcePath], pingPongFilter(info.frames), outputs);
       } else {
         await encode(['-i', sourcePath], trimFilter(loop), outputs);
       }
@@ -191,15 +202,15 @@ export async function optimizeMascots({ sourceDir, outputDir, checkDir }) {
       manifest.width = output.width;
       manifest.height = output.height;
       manifest.fps = output.fps;
-      manifest.clips[name] = { seam, loop: seam !== 'once', frames: output.frames, bytes };
+      manifest.clips[name] = { seam, frames: output.frames, bytes };
       report.push({
         clip: name,
         seam,
-        'source frames': seam === 'once' ? 'all' : `${loop.start}-${loop.end}`,
+        'source frames': seam === 'pingpong' ? 'all, forwards then back' : `${loop.start}-${loop.end}`,
         'output frames': output.frames,
         'last>first diff': assessment.lastToFirst.toFixed(2),
         'typical step diff': assessment.typicalStep.toFixed(2),
-        'seamless loop': seam === 'once' ? 'n/a (plays once)' : assessment.accepted ? 'yes' : 'NO',
+        'seamless loop': assessment.accepted ? 'yes' : 'NO',
         'mp4 KB': Math.round(bytes.mp4 / 1024),
         'webm KB': Math.round(bytes.webm / 1024),
         'poster KB': Math.round(bytes.poster / 1024),
