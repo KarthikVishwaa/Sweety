@@ -82,20 +82,41 @@ describe('gender at registration', () => {
 });
 
 describe('accounts that existed before gender', () => {
-  it('default to male and can still log in', async () => {
+  const insertOldAccount = async () => {
     const passwordHash = await bcrypt.hash(valid.password, 4);
     await pool.query('INSERT INTO users (name, email, password_hash) VALUES ($1, $2, $3)', [
       'Old Account',
       'old@example.com',
       passwordHash,
     ]);
+  };
 
-    const login = await request(app)
+  it('have no gender, not a default one, and can still log in', async () => {
+    await insertOldAccount();
+    const agent = request.agent(app);
+
+    const login = await agent
+      .post('/api/auth/login')
+      .send({ email: 'old@example.com', password: valid.password });
+    const me = await agent.get('/api/auth/me');
+
+    expect(login.status).toBe(200);
+    expect(login.body.user).toMatchObject({ gender: null, dateOfBirth: null });
+    expect(me.body.user.gender).toBeNull();
+    expect(await genderInDatabase('old@example.com')).toBeNull();
+  });
+
+  it('can choose a gender later', async () => {
+    await insertOldAccount();
+    const agent = request.agent(app);
+    await agent
       .post('/api/auth/login')
       .send({ email: 'old@example.com', password: valid.password });
 
-    expect(login.status).toBe(200);
-    expect(login.body.user).toMatchObject({ gender: 'male', dateOfBirth: null });
+    const response = await agent.patch('/api/users/me').send({ gender: 'other' });
+
+    expect(response.status).toBe(200);
+    expect(response.body.user.gender).toBe('other');
   });
 });
 
@@ -135,6 +156,8 @@ describe('PATCH /api/users/me', () => {
     ['missing', {}],
     ['unknown', { gender: 'robot' }],
     ['not a string', { gender: 7 }],
+    ['null', { gender: null }],
+    ['the wrong case', { gender: 'Female' }],
   ])('rejects a gender that is %s and changes nothing', async (_label, body) => {
     const agent = await createAuthenticatedAgent();
 
