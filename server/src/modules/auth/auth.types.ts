@@ -1,6 +1,6 @@
-export const BODY_MODELS = ['male', 'female'] as const;
+export const GENDERS = ['male', 'female', 'other'] as const;
 
-export type BodyModel = (typeof BODY_MODELS)[number];
+export type Gender = (typeof GENDERS)[number];
 
 export type UserRole = 'patient' | 'doctor';
 
@@ -10,7 +10,7 @@ export interface User {
   email: string;
   role: UserRole;
   dateOfBirth: string | null;
-  bodyModel: BodyModel;
+  gender: Gender;
 }
 
 export interface UserRecord extends User {
@@ -22,7 +22,7 @@ export interface NewUser {
   email: string;
   passwordHash: string;
   dateOfBirth: string;
-  bodyModel: BodyModel;
+  gender: Gender;
 }
 
 export interface AuthSession {

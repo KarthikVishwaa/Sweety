@@ -1,14 +1,14 @@
 import { pool } from '../../db/pool.js';
 import { USER_COLUMNS } from '../auth/auth.repository.js';
-import type { BodyModel, UserRecord } from '../auth/auth.types.js';
+import type { Gender, UserRecord } from '../auth/auth.types.js';
 
-export async function updateBodyModel(
+export async function updateGender(
   userId: string,
-  bodyModel: BodyModel,
+  gender: Gender,
 ): Promise<UserRecord | undefined> {
   const result = await pool.query<UserRecord>(
-    `UPDATE users SET body_model = $2 WHERE id = $1 RETURNING ${USER_COLUMNS}`,
-    [userId, bodyModel],
+    `UPDATE users SET gender = $2 WHERE id = $1 RETURNING ${USER_COLUMNS}`,
+    [userId, gender],
   );
   return result.rows[0];
 }

@@ -8,7 +8,7 @@ const validUser = {
   email: 'asha@example.com',
   password: 'sweet1234',
   dateOfBirth: '1990-05-15',
-  bodyModel: 'male',
+  gender: 'male',
 };
 const INVALID_CREDENTIALS = 'Invalid email or password.';
 
@@ -38,7 +38,7 @@ describe('POST /api/auth/register', () => {
       email: 'asha@example.com',
       role: 'patient',
       dateOfBirth: '1990-05-15',
-      bodyModel: 'male',
+      gender: 'male',
     });
     expect(response.body.user.id).toEqual(expect.any(String));
     expect(JSON.stringify(response.body)).not.toMatch(/password/i);
@@ -91,7 +91,7 @@ describe('POST /api/auth/register', () => {
       email: 'Enter a valid email address',
       password: 'Password must be at least 8 characters',
       dateOfBirth: 'Please enter your date of birth.',
-      bodyModel: 'Please choose a body model.',
+      gender: 'Please choose a gender.',
     });
   });
 

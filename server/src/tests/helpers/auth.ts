@@ -10,7 +10,7 @@ export function createAuthenticatedAgent(email = 'asha@example.com') {
       email,
       password: 'sweet1234',
       dateOfBirth: '1990-05-15',
-      bodyModel: 'male',
+      gender: 'male',
     })
     .then(() => agent);
 }

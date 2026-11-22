@@ -10,8 +10,8 @@ export const BCRYPT_COST = 12;
 const UNIQUE_VIOLATION = '23505';
 const DUMMY_PASSWORD_HASH = '$2b$12$1TVgqnUqoOjKinpl/VD8.u4Xcz.EkQPqlpAqmG5N8xp6LctaXVz.i';
 
-export function toUser({ id, name, email, role, dateOfBirth, bodyModel }: UserRecord): User {
-  return { id, name, email, role, dateOfBirth, bodyModel };
+export function toUser({ id, name, email, role, dateOfBirth, gender }: UserRecord): User {
+  return { id, name, email, role, dateOfBirth, gender };
 }
 
 function startSession(record: UserRecord): AuthSession {
@@ -24,12 +24,12 @@ export async function register({
   email,
   password,
   dateOfBirth,
-  bodyModel,
+  gender,
 }: RegisterInput): Promise<AuthSession> {
   const passwordHash = await bcrypt.hash(password, BCRYPT_COST);
 
   try {
-    return startSession(await insertUser({ name, email, passwordHash, dateOfBirth, bodyModel }));
+    return startSession(await insertUser({ name, email, passwordHash, dateOfBirth, gender }));
   } catch (error) {
     if (error instanceof pg.DatabaseError && error.code === UNIQUE_VIOLATION) {
       const message = 'An account with this email already exists.';

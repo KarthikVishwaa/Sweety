@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { BODY_MODELS } from './auth.types.js';
+import { GENDERS } from './auth.types.js';
 import { isRealCalendarDate, todayInTimeZone, yearsAgo } from '../../utils/date.js';
 
 const MAX_AGE_YEARS = 120;
@@ -10,7 +10,7 @@ const DATE_OF_BIRTH_MESSAGES = {
   future: 'Date of birth cannot be in the future.',
 } as const;
 
-export const bodyModel = z.enum(BODY_MODELS, { error: 'Please choose a body model.' });
+export const gender = z.enum(GENDERS, { error: 'Please choose a gender.' });
 
 const dateOfBirth = z
   .string({ error: DATE_OF_BIRTH_MESSAGES.required })
@@ -45,7 +45,7 @@ export const registerSchema = z.object({
     .regex(/[A-Za-z]/, 'Password must contain at least one letter')
     .regex(/\d/, 'Password must contain at least one number'),
   dateOfBirth,
-  bodyModel,
+  gender,
 });
 
 export const loginSchema = z.object({
