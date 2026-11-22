@@ -1,16 +1,13 @@
-import { Check } from 'lucide-react';
 import type { FormEvent } from 'react';
-import { useWatch, type UseFormReturn } from 'react-hook-form';
+import { Controller, useWatch, type UseFormReturn } from 'react-hook-form';
 import { FormError } from '@/components/form/FormError';
 import { SubmitButton } from '@/components/form/SubmitButton';
 import { StaggerGroup, StaggerItem } from '@/components/motion/Stagger';
 import { Button } from '@/components/ui/button';
-import { GENDERS } from '@/features/body/bodyProportions';
-import { cn } from '@/lib/utils';
+import { GENDER_HELP, GenderCards } from '@/features/body/GenderCards';
 import type { SignupInput } from '../auth.schemas';
 import { StepHeading } from './StepHeading';
 
-const LABELS = { male: 'Male', female: 'Female', other: 'Other' } as const;
 const HINT_ID = 'gender-hint';
 
 interface GenderStepProps {
@@ -31,7 +28,6 @@ export function GenderStep({
   focusHeading,
 }: GenderStepProps) {
   const {
-    register,
     control,
     formState: { errors },
   } = form;
@@ -41,10 +37,7 @@ export function GenderStep({
     <form noValidate onSubmit={onSubmit}>
       <StaggerGroup className="space-y-4">
         <StaggerItem>
-          <StepHeading
-            focusOnMount={focusHeading}
-            description="We use this to show a figure that feels like you. It is only used for the picture, and you can change it any time."
-          >
+          <StepHeading focusOnMount={focusHeading} description={GENDER_HELP}>
             Gender
           </StepHeading>
         </StaggerItem>
@@ -53,35 +46,18 @@ export function GenderStep({
           className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive"
         />
         <StaggerItem>
-          <div role="radiogroup" aria-label="Gender" className="grid grid-cols-3 gap-2 sm:gap-3">
-            {GENDERS.map((model) => (
-              <label
-                key={model}
-                className={cn(
-                  'relative flex min-h-20 lg:min-h-28 cursor-pointer items-center justify-center rounded-xl border-2 bg-card p-4 text-base font-medium transition-colors lg:text-lg',
-                  'hover:border-teal-300 has-[:checked]:border-primary has-[:checked]:bg-teal-50',
-                  'has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-ring has-[:focus-visible]:ring-offset-2',
-                  pending && 'pointer-events-none opacity-60',
-                )}
-              >
-                <input
-                  type="radio"
-                  value={model}
-                  disabled={pending}
-                  className="sr-only"
-                  {...register('gender')}
-                />
-                {LABELS[model]}
-                <Check
-                  aria-hidden="true"
-                  className={cn(
-                    'absolute right-2 top-2 size-4 text-primary transition-opacity',
-                    selected === model ? 'opacity-100' : 'opacity-0',
-                  )}
-                />
-              </label>
-            ))}
-          </div>
+          <Controller
+            control={control}
+            name="gender"
+            render={({ field }) => (
+              <GenderCards
+                name={field.name}
+                value={field.value}
+                onChange={field.onChange}
+                disabled={pending}
+              />
+            )}
+          />
           {errors.gender && (
             <p role="alert" className="mt-2 text-sm text-destructive">
               {errors.gender.message}

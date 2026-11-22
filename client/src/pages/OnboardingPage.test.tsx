@@ -8,6 +8,11 @@ import { ApiError } from '@/lib/api';
 import { OnboardingPage } from './OnboardingPage';
 
 vi.mock('@/features/auth/authApi');
+vi.mock('@/features/body/BodyGlucoseGauge', () => ({
+  BodyGlucoseGauge: ({ model, value }: { model: string; value: number | null }) => (
+    <div data-testid="stage-figure">{`${model}:${value ?? 'empty'}`}</div>
+  ),
+}));
 
 const TODAY = new Date('2026-11-21T06:00:00Z');
 const CREATED_USER = {
@@ -234,6 +239,18 @@ describe('onboarding', () => {
       await chooseGender('Female');
       expect(screen.getByRole('radio', { name: 'Female' })).toBeChecked();
       expect(screen.getByRole('radio', { name: 'Male' })).not.toBeChecked();
+    });
+
+    it('starts the stage as an empty neutral figure, then shows the chosen one filled', async () => {
+      renderOnboarding();
+      await completeAboutStep();
+
+      expect(await screen.findByTestId('stage-figure')).toHaveTextContent('other:empty');
+
+      await chooseGender('Female');
+      await waitFor(() =>
+        expect(screen.getByTestId('stage-figure')).toHaveTextContent('female:110'),
+      );
     });
 
     it('offers Male, Female and Other, and registers Other when chosen', async () => {
