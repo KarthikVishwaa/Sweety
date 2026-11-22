@@ -11,6 +11,7 @@ import { notFound } from './middleware/notFound.js';
 import { globalLimiter } from './middleware/rateLimiters.js';
 import { authRouter } from './modules/auth/auth.routes.js';
 import { healthRouter } from './modules/health/health.routes.js';
+import { insightsRouter } from './modules/insights/insights.routes.js';
 import { readingsRouter } from './modules/readings/readings.routes.js';
 import { reportsRouter } from './modules/reports/reports.routes.js';
 import { usersRouter } from './modules/users/users.routes.js';
@@ -30,6 +31,7 @@ app.use(hpp());
 
 app.use('/api/auth', authRouter);
 app.use('/api/health', healthRouter);
+app.use('/api/insights', insightsRouter);
 app.use('/api/readings', readingsRouter);
 app.use('/api/reports', reportsRouter);
 app.use('/api/users', usersRouter);
