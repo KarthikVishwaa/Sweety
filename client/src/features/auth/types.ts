@@ -10,4 +10,6 @@ export interface User {
   dateOfBirth: string | null;
   /** Null until the person chooses one (accounts made before gender existed). */
   gender: Gender | null;
+  /** When the account was made, as an ISO timestamp. */
+  createdAt: string;
 }

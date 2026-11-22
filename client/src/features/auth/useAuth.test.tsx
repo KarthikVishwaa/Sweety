@@ -12,6 +12,7 @@ const user = {
   name: 'Ben',
   email: 'ben@example.com',
   role: 'patient' as const,
+  createdAt: '2026-01-01T00:00:00.000Z',
   dateOfBirth: null,
   gender: 'male' as const,
 };

@@ -48,6 +48,7 @@ describe('HistoryPage pagination', () => {
       name: 'Asha',
       email: 'asha@example.com',
       role: 'patient',
+      createdAt: '2026-01-01T00:00:00.000Z',
       dateOfBirth: null,
       gender: 'male' as const,
     });

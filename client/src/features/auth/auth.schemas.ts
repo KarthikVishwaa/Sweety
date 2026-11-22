@@ -12,7 +12,7 @@ const DATE_OF_BIRTH_MESSAGES = {
 
 const email = z.string().trim().toLowerCase().pipe(z.email('Enter a valid email address'));
 
-const dateOfBirth = z
+export const dateOfBirth = z
   .string()
   .trim()
   .min(1, DATE_OF_BIRTH_MESSAGES.required)
@@ -25,12 +25,16 @@ const dateOfBirth = z
     }
   });
 
+export const name = z
+  .string()
+  .trim()
+  .min(2, 'Name must be at least 2 characters')
+  .max(60, 'Name must be at most 60 characters');
+
+export const gender = z.enum(GENDERS, { error: 'Please choose a gender.' });
+
 export const signupSchema = z.object({
-  name: z
-    .string()
-    .trim()
-    .min(2, 'Name must be at least 2 characters')
-    .max(60, 'Name must be at most 60 characters'),
+  name,
   email,
   password: z
     .string()
@@ -39,7 +43,7 @@ export const signupSchema = z.object({
     .regex(/[A-Za-z]/, 'Password must contain at least one letter')
     .regex(/\d/, 'Password must contain at least one number'),
   dateOfBirth,
-  gender: z.enum(GENDERS, { error: 'Please choose a gender.' }),
+  gender,
 });
 
 export const ACCOUNT_FIELDS = ['name', 'email', 'password'] as const;

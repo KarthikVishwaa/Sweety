@@ -5,7 +5,11 @@ import { GENDERS, type Gender } from './bodyProportions';
 export const GENDER_HELP =
   'We use this to show a figure that feels like you. It is only used for the picture, and you can change it any time.';
 
-const LABELS: Record<Gender, string> = { male: 'Male', female: 'Female', other: 'Other' };
+export const GENDER_LABELS: Record<Gender, string> = {
+  male: 'Male',
+  female: 'Female',
+  other: 'Other',
+};
 
 interface GenderCardsProps {
   /** Null or undefined means nothing is chosen yet; there is never a default. */
@@ -49,7 +53,7 @@ export function GenderCards({
             onChange={() => onChange(gender)}
             className="sr-only"
           />
-          {LABELS[gender]}
+          {GENDER_LABELS[gender]}
           <Check
             aria-hidden="true"
             className={cn(

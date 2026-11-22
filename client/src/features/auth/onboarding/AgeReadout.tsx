@@ -1,12 +1,23 @@
 import { motion, useReducedMotion } from 'motion/react';
-import { useWatch, type Control } from 'react-hook-form';
+import { useWatch, type Control, type Path } from 'react-hook-form';
 import { calculateAge, formatAge } from '@/lib/age';
 import { todayInIST, yearsAgo } from '@/lib/date';
 import { DURATION, EASE_OUT } from '@/lib/motion';
-import { MAX_AGE_YEARS, type SignupInput } from '../auth.schemas';
+import { MAX_AGE_YEARS } from '../auth.schemas';
 
-export function AgeReadout({ control }: { control: Control<SignupInput> }) {
-  const dateOfBirth = useWatch({ control, name: 'dateOfBirth' });
+interface WithDateOfBirth {
+  dateOfBirth: string;
+}
+
+export function AgeReadout<Values extends WithDateOfBirth>({
+  control,
+}: {
+  control: Control<Values>;
+}) {
+  const dateOfBirth = useWatch({
+    control,
+    name: 'dateOfBirth' as Path<Values>,
+  }) as unknown as string;
   const reducedMotion = useReducedMotion();
   const today = todayInIST();
   const age =

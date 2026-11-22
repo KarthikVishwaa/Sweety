@@ -20,6 +20,7 @@ const CREATED_USER = {
   name: 'Asha Rao',
   email: 'asha@example.com',
   role: 'patient' as const,
+  createdAt: '2026-01-01T00:00:00.000Z',
   dateOfBirth: '1990-05-15',
   gender: 'female' as const,
 };

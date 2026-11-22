@@ -1,4 +1,5 @@
 import { isRealDate } from '@/lib/date';
+import { plural } from '@/lib/plural';
 
 export interface Age {
   years: number;
@@ -60,10 +61,6 @@ export function calculateAge(dateOfBirth: string, today: string): Age | null {
   };
 }
 
-function plural(count: number, unit: string): string {
-  return `${count} ${unit}${count === 1 ? '' : 's'}`;
-}
-
 export function formatAge({ years, months, days }: Age): string {
   if (years > 0) {
     return `You are ${plural(years, 'year')}${months > 0 ? ` and ${plural(months, 'month')}` : ''} old`;
@@ -72,4 +69,11 @@ export function formatAge({ years, months, days }: Age): string {
     return `You are ${plural(months, 'month')}${days > 0 ? ` and ${plural(days, 'day')}` : ''} old`;
   }
   return days > 0 ? `You are ${plural(days, 'day')} old` : 'You were born today';
+}
+
+/** The largest unit only, for example "36 years". */
+export function formatAgeShort({ years, months, days }: Age): string {
+  if (years > 0) return plural(years, 'year');
+  if (months > 0) return plural(months, 'month');
+  return plural(days, 'day');
 }

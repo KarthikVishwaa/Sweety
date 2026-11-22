@@ -4,11 +4,11 @@ import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import * as authApi from '@/features/auth/authApi';
 import type { User } from '@/features/auth/types';
+import * as profileApi from '@/features/profile/profileApi';
 import { ChooseFigureDialog } from './ChooseFigureDialog';
-import * as genderApi from './genderApi';
 
 vi.mock('@/features/auth/authApi');
-vi.mock('./genderApi');
+vi.mock('@/features/profile/profileApi');
 vi.mock('sonner', () => ({ toast: { success: vi.fn(), error: vi.fn() } }));
 
 let nextId = 0;
@@ -20,6 +20,7 @@ const userWithout = (gender: User['gender'] = null): User => ({
   role: 'patient',
   dateOfBirth: null,
   gender,
+  createdAt: '2026-01-01T00:00:00.000Z',
 });
 
 function renderPrompt() {
@@ -47,14 +48,14 @@ describe('Choose a figure prompt', () => {
   it('saves the choice and does not come back', async () => {
     const user = userWithout();
     vi.mocked(authApi.getMe).mockResolvedValue(user);
-    vi.mocked(genderApi.updateGender).mockResolvedValue({ ...user, gender: 'female' });
+    vi.mocked(profileApi.updateProfile).mockResolvedValue({ ...user, gender: 'female' });
     renderPrompt();
     await screen.findByRole('dialog', { name: 'Choose a figure' });
 
     await userEvent.click(screen.getByRole('radio', { name: 'Female' }));
     await userEvent.click(screen.getByRole('button', { name: 'Save' }));
 
-    expect(genderApi.updateGender).toHaveBeenCalledWith('female');
+    expect(profileApi.updateProfile).toHaveBeenCalledWith({ gender: 'female' });
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
   });
 
@@ -71,7 +72,7 @@ describe('Choose a figure prompt', () => {
     renderPrompt();
     await waitFor(() => expect(authApi.getMe).toHaveBeenCalledTimes(2));
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
-    expect(genderApi.updateGender).not.toHaveBeenCalled();
+    expect(profileApi.updateProfile).not.toHaveBeenCalled();
   });
 
   it('never appears once a gender is saved', async () => {

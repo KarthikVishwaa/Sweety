@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { calculateAge, formatAge } from './age';
+import { calculateAge, formatAge, formatAgeShort } from './age';
 
 describe('calculateAge', () => {
   it.each([
@@ -88,5 +88,17 @@ describe('formatAge', () => {
     [{ years: 0, months: 0, days: 0 }, 'You were born today'],
   ])('%j reads "%s"', (age, expected) => {
     expect(formatAge(age)).toBe(expected);
+  });
+});
+
+describe('formatAgeShort', () => {
+  it.each([
+    [{ years: 36, months: 10, days: 3 }, '36 years'],
+    [{ years: 1, months: 0, days: 0 }, '1 year'],
+    [{ years: 0, months: 5, days: 9 }, '5 months'],
+    [{ years: 0, months: 1, days: 0 }, '1 month'],
+    [{ years: 0, months: 0, days: 11 }, '11 days'],
+  ])('%j reads "%s"', (age, expected) => {
+    expect(formatAgeShort(age)).toBe(expected);
   });
 });
