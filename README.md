@@ -290,6 +290,7 @@ Every error has the same shape: `{ "error": { "message": "...", "code": "...", "
 | POST   | `/api/auth/login`    | no   | Log in                                        |
 | POST   | `/api/auth/logout`   | no   | Clear the cookie                              |
 | GET    | `/api/auth/me`       | yes  | The current user                              |
+| PATCH  | `/api/users/me`      | yes  | Change your body model (`male` or `female`)   |
 | GET    | `/api/readings`      | yes  | List readings (paginated, optional date)      |
 | POST   | `/api/readings`      | yes  | Create a reading                              |
 | PUT    | `/api/readings/:id`  | yes  | Replace a reading                             |
@@ -303,8 +304,9 @@ unreachable.
 
 ### Auth
 
-`POST /api/auth/register` with `{ "name", "email", "password" }` returns `201`, sets the cookie and returns the user. The
-password hash is never returned.
+`POST /api/auth/register` with `{ "name", "email", "password", "dateOfBirth", "bodyModel" }` returns `201`, sets the cookie and returns the user. The
+password hash is never returned. `bodyModel` is `"male"` or `"female"` and is required for new sign-ups ("Please choose a body model."); the user object
+returned by register, login and `/me` includes it. `PATCH /api/users/me` with `{ "bodyModel" }` returns `200 { user }` and only ever changes the caller's own row.
 
 ```json
 {
@@ -546,17 +548,42 @@ With no readings in the range the API still returns `200` with `count: 0` and `n
 
 ### Onboarding
 
-`/signup` is a three-step flow inside the same two-column layout as the login page (mascot, logo and a friendly line on the left,
-the form card on the right; a single column on phones).
+`/signup` is a three-step flow inside the same two-column layout as the login page (a fixed-size stage and a friendly line on the
+left, the form card on the right; a single column on phones).
 
 1. **Create your account** (floating mascot): name, email and password. Next is blocked with inline errors until they are valid.
 2. **About you** (waving mascot): date of birth in a native date input limited to today and 120 years ago, with the age shown
    live ("You are 36 years and 6 months old", announced politely to screen readers). Nothing medical is asked.
-3. **Welcome to Sweety** (bouncing mascot): shown after the account exists, with the first name and a "Go to my dashboard" button.
+3. **Choose your body model**: two selectable cards, Male and Female (native radios, so arrow keys work). Nothing is chosen by
+   default and "Create my account" stays disabled, with a reason, until one is. The waving mascot stays on the stage until a
+   choice is made, then it cross-fades to the 3D body, which fills once to an in-range demo value (110).
+4. **Welcome to Sweety** (bouncing mascot): shown after the account exists, with the first name and a "Go to my dashboard" button.
 
-The account is created once, at the end of step 2, with a single register call. If the server rejects a field from step 1 (for
-example a taken email, 409) the flow goes back to step 1 and shows the message on that field. Back keeps everything typed; the form
-state lives only in memory and the password is never stored. The login page uses the loving mascot.
+The account is created once, at the end of step 3, with a single register call. If the server rejects a field from step 1 (for
+example a taken email, 409) the flow goes back to step 1 and shows the message on that field; a date-of-birth error goes back to
+step 2. Back keeps everything typed; the form state lives only in memory and the password is never stored. The login page uses the
+loving mascot. Every screen has a staggered entrance, a direction-aware step slide and an animated progress bar, all using only
+transform and opacity; with `prefers-reduced-motion` they become short fades.
+
+### Body model and the glucose body
+
+The dashboard shows a 3D figure that fills with a colour like a glass of liquid: empty at 40 mg/dl, full (top of the head) at 400
+or more, linear in between. The colour follows the same bands as the rest of the app (below 70 amber, 70 to 180 green, above 180
+red). It shows the latest reading of the selected day (after dinner, then lunch, breakfast, morning) and the meaning is always
+given as text under it ("After lunch, 182 mg/dl, High"). A Male / Female switch under it calls `PATCH /api/users/me` with an
+optimistic update and rolls back with an error toast if the call fails.
+
+Assumptions and limits:
+
+- The figure is a **procedural, stylised mannequin**, not a scanned or modelled human. Each body part is a rounded primitive,
+  smoothly merged into one signed-distance field and meshed with surface nets (about 47k triangles). All proportions live in
+  `client/src/features/body/bodyProportions.ts`. `getBodyGeometry(model)` is the only entry point, so a modelled GLB can replace it.
+- The mesh takes about a quarter to half a second to build, so it runs in a Web Worker and is cached per model. The worker is a
+  same-origin module, so the CSP needed no change.
+- Existing accounts get `male` (the column default) and can change it from the dashboard.
+- Only **one WebGL canvas** is on a page at a time (the dashboard, or the onboarding stage). three.js loads lazily, so the login
+  page does not download it. Without WebGL, or if it fails, a flat card with the value, a band badge and a level meter is shown.
+- Rendering pauses when the tab is hidden or the canvas is off screen, and draws on demand under reduced motion.
 
 ### Media
 
@@ -573,9 +600,12 @@ script writes WebM, MP4 (no audio) and a WebP poster per clip to `client/src/ass
 `client/src/assets/`, and the favicons to `client/public/`.
 
 - Each clip is cropped to the band of the 1080x1920 original that contains the mascot and scaled to 720 px tall.
-- The script checks whether a clip's last frame flows into its first (SSIM) and cross-fades the last 10 frames into the first
-  10 for the clips that need it (floating, waving and love). The bouncing clip already loops seamlessly. The cross-fade leaves a
-  brief, faint double image in those 0.4 seconds.
+- **Loops never blend two poses.** The script decodes each clip, compares every candidate start frame (first 40%) with every
+  candidate end frame (last 40%) by mean squared error (also comparing the frames either side, so the direction of motion matches)
+  and trims the clip to the best pair, with a minimum length of about 2 seconds. If the best trim is still not good enough it
+  interpolates the last frames towards the first with motion compensation (ffmpeg `minterpolate`). The acceptance test is printed
+  per clip: the last-to-first difference must be no larger than the typical difference between two consecutive frames. The
+  love clip plays once and rests on its last frame.
 - Near-white is snapped to pure white. The videos are drawn with `mix-blend-mode: multiply` so the white disappears into the page,
   and multiply can only darken, so an off-white background would show as a faint box.
 - WebM output from VP9 is not bit-for-bit reproducible, so re-running the script changes those files even when nothing else did.

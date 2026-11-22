@@ -29,6 +29,9 @@ vi.mock('recharts', async (importOriginal) => {
 
 vi.stubGlobal('scrollTo', () => undefined);
 
+HTMLCanvasElement.prototype.getContext = vi.fn(
+  () => null,
+) as unknown as HTMLCanvasElement['getContext'];
 HTMLMediaElement.prototype.play = vi.fn(() => Promise.resolve());
 HTMLMediaElement.prototype.pause = vi.fn();
 HTMLMediaElement.prototype.load = vi.fn();
