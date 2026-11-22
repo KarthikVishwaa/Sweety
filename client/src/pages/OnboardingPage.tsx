@@ -43,7 +43,7 @@ const NEXT_MASCOT: Partial<Record<Step, MascotVariant>> = {
 const TAGLINE_BY_STEP: Record<Step, string> = {
   account: "Let's get you set up. It only takes a minute.",
   about: 'Nice to meet you!',
-  body: 'This is you, filling up with good numbers.',
+  body: 'Pick the figure that feels right for you.',
   welcome: "You're all set!",
 };
 // An in-range reading, shown once on the body step so the figure visibly fills.

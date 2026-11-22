@@ -45,7 +45,7 @@ export const fragmentShader = /* glsl */ `
     liquidColor += vec3(surfaceGlow);
 
     vec3 glassColor = mix(vec3(0.86, 0.9, 0.96), uColor, 0.18) * (0.9 + 0.1 * diffuse);
-    float glassAlpha = (0.07 + 0.42 * fresnel) * mix(1.0, 0.7, uBackFace);
+    float glassAlpha = (0.1 + 0.45 * fresnel) * mix(1.0, 0.7, uBackFace);
 
     vec3 color = mix(glassColor, liquidColor, liquid);
     float alpha = mix(glassAlpha, mix(0.94, 0.86, uBackFace), liquid);
@@ -55,5 +55,6 @@ export const fragmentShader = /* glsl */ `
     alpha = max(alpha, rings * 0.32);
 
     gl_FragColor = vec4(color, alpha * uOpacity);
+    #include <colorspace_fragment>
   }
 `;

@@ -16,7 +16,7 @@ export function DashboardPage() {
   return (
     <div className="mx-auto max-w-6xl space-y-6 p-4 sm:p-6">
       <AppHeader heading={`Hello, ${user?.name}`} />
-      <div className="grid gap-6 lg:grid-cols-[20rem_minmax(0,1fr)] lg:items-start">
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-[20rem_minmax(0,1fr)] lg:items-start">
         <aside className="lg:sticky lg:top-6">
           <BodyPanel date={date} />
         </aside>
