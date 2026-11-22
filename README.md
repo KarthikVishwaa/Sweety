@@ -19,6 +19,7 @@ report. The backend is Node, Express and PostgreSQL, the frontend is React, and 
 11. [Report definitions](#report-definitions)
 12. [Security notes](#security-notes)
 13. [Notes](#notes)
+14. [Credits](#credits)
 
 ## Screenshots
 
@@ -554,9 +555,9 @@ left, the form card on the right; a single column on phones).
 1. **Create your account** (floating mascot): name, email and password. Next is blocked with inline errors until they are valid.
 2. **About you** (waving mascot): date of birth in a native date input limited to today and 120 years ago, with the age shown
    live ("You are 36 years and 6 months old", announced politely to screen readers). Nothing medical is asked.
-3. **Choose your gender**: three selectable cards, Male, Female and Other (native radios, so arrow keys work). Nothing is chosen by
-   default and "Create my account" stays disabled, with a reason, until one is. The waving mascot stays on the stage until a
-   choice is made, then it cross-fades to the 3D body, which fills once to an in-range demo value (110).
+3. **Gender**: three selectable cards, Male, Female and Other (native radios, so arrow keys work). Nothing is chosen by
+   default and "Create my account" stays disabled, with a reason, until one is. The stage shows an empty, neutral glass figure until a
+   choice is made, then cross-fades to the chosen figure, which fills once to an in-range demo value (110).
 4. **Welcome to Sweety** (bouncing mascot): shown after the account exists, with the first name and a "Go to my dashboard" button.
 
 The account is created once, at the end of step 3, with a single register call. If the server rejects a field from step 1 (for
@@ -569,21 +570,72 @@ transform and opacity; with `prefers-reduced-motion` they become short fades.
 
 The dashboard shows a 3D figure that fills with a colour like a glass of liquid: empty at 40 mg/dl, full (top of the head) at 400
 or more, linear in between. The colour follows the same bands as the rest of the app (below 70 amber, 70 to 180 green, above 180
-red). It shows the latest reading of the selected day (after dinner, then lunch, breakfast, morning) and the meaning is always
-given as text under it ("After lunch, 182 mg/dl, High"). A Male / Female / Other switch under it calls `PATCH /api/users/me` with an
-optimistic update and rolls back with an error toast if the call fails.
+red), with faint rings at 70 and 180. It shows the latest reading of the selected day (after dinner, then lunch, breakfast,
+morning), and the meaning is always given as text under it ("After lunch, 182 mg/dl, High").
 
-Assumptions and limits:
+**Gender behaviour.** Gender is stored only to choose the figure; nothing else uses it.
 
-- The figure is a **procedural, stylised mannequin**, not a scanned or modelled human. Each body part is a rounded primitive,
-  smoothly merged into one signed-distance field and meshed with surface nets (about 47k triangles). All proportions live in
-  `client/src/features/body/bodyProportions.ts`. `getBodyGeometry(model)` is the only entry point, so a modelled GLB can replace it.
-- The mesh takes about a quarter to half a second to build, so it runs in a Web Worker and is cached per model. The worker is a
-  same-origin module, so the CSP needed no change.
-- `other` is a full option with its own neutral figure (until a modelled one replaces it, the average of the male and female proportions). Gender is stored only to choose the figure. The column is nullable with no default: accounts made before it existed are `null` until the person chooses, and they see the neutral figure with the hint "Choose a figure" and nothing selected in the switch.
-- Only **one WebGL canvas** is on a page at a time (the dashboard, or the onboarding stage). three.js loads lazily, so the login
-  page does not download it. Without WebGL, or if it fails, a flat card with the value, a band badge and a level meter is shown.
-- Rendering pauses when the tab is hidden or the canvas is off screen, and draws on demand under reduced motion.
+- Sign-up asks for it on its own screen after the date of birth (Male, Female or Other, no default, "Create my account" stays
+  disabled until one is chosen). The stage starts as an empty, neutral glass figure; choosing a card cross-fades to that figure,
+  which fills once to an in-range demo value.
+- From then on the figure everywhere follows the account. It is changed in **Profile** (the user menu in the header), with an
+  optimistic update that is rolled back with a message if saving fails. There is no switch on the dashboard.
+- The column is nullable with no default. Accounts made before gender existed are `null`: they see the neutral figure and a
+  dismissible, one-time "Choose a figure" dialog, which never returns once a gender is saved (a dismissed one may return after a
+  reload or the next login).
+
+**How the figures are made.** The three figures (`male`, `female`, `other`) are original: they are generated by this repository's
+own code, with no scanned, purchased or third-party model involved, so no attribution or licence is needed for them.
+
+1. `client/src/features/body/bodyProportions.ts` holds one typed table per gender: landmark heights as fractions of the stature
+   (approximately Drillis and Contini: head 0.130, chin 0.870, shoulder 0.818, chest 0.720, elbow 0.630, navel 0.600, wrist 0.485,
+   hip joint 0.530, crotch about 0.47, fingertip 0.377, knee 0.285, ankle 0.039), widths, foot and hand sizes and posture. The
+   female stature is 0.93 of the male, and `other` is the exact average of the two.
+2. `client/src/features/body/generator/` builds each figure as rounded primitives (lofted elliptical sections for the torso,
+   limbs and feet, ellipsoids and round cones elsewhere) joined by smooth unions with a blend radius per joint, cut flat at the sole.
+   It is extracted with surface nets at 0.0038 of the stature (about 110,000 triangles), smoothed with three iterations of Taubin
+   smoothing (no shrinkage), and given normals from the field's gradient. Feet have a heel, a high instep, a ball at 72 per cent of
+   the length, a rounded toe box with a straighter big-toe edge, a carved medial arch, a flat sole on y = 0 and 10 degrees of
+   toe-out.
+3. `npm run models:generate` (`scripts/models/generate-bodies.mjs`, using `@gltf-transform/core`, `@gltf-transform/functions` and
+   `meshoptimizer`) runs the generator in Node, validates each figure and writes `client/src/assets/models/{male,female,other}.glb`
+   at unit height: one mesh, welded, positions and normals only, quantised and meshopt-compressed (about 600 kB each). It stops
+   with a clear message if any check fails. The generator is shared with the tests but never imported by the app, so it is not in
+   the bundle; the app loads the GLB with three's `GLTFLoader` and `MeshoptDecoder` and scales it to the stature.
+
+The validation table printed by the script (and checked again by `bodyModels.test.ts` on the committed files, so a broken bake
+fails CI):
+
+| Figure | Triangles | Height | Components | Boundary edges | Non-manifold edges | Degenerate | Volume > 0 | Asymmetry | Foot / S | Shoulder / S | Waist / S | Hip / S | GLB    |
+| ------ | --------- | ------ | ---------- | -------------- | ------------------ | ---------- | ---------- | --------- | -------- | ------------ | --------- | ------- | ------ |
+| male   | 112,628   | 1      | 1          | 0              | 0                  | 0          | yes        | 0.00093   | 0.152    | 0.264        | 0.176     | 0.200   | 605 kB |
+| female | 110,380   | 1      | 1          | 0              | 0                  | 0          | yes        | 0.00093   | 0.148    | 0.240        | 0.168     | 0.216   | 596 kB |
+| other  | 111,496   | 1      | 1          | 0              | 0                  | 0          | yes        | 0.00093   | 0.150    | 0.256        | 0.168     | 0.208   | 599 kB |
+
+Widths are measured on the mesh (shoulder includes the deltoids; the arms are excluded from the waist and hips) and must be
+within 0.015 of the table; the foot within 0.008.
+
+**Replacing a figure with a hand-made model.** Export a single watertight mesh as `client/src/assets/models/<gender>.glb`
+(positions and normals; meshopt or plain), standing on y = 0, centred on x and z, facing +z and exactly 1 unit tall: the app
+scales it to the stature. Run `npm test -w client` to check it, and stop running `models:generate` for that figure.
+
+**Rendering.** The glass and the liquid are one `MeshPhysicalMaterial` drawn twice (inside back wall, then front), lit by three's
+`RoomEnvironment` through `PMREMGenerator`, with ACES filmic tone mapping, sRGB output and MSAA. Shader code added to it draws the
+liquid below the level (the band colour, deeper towards the feet and lighter near the surface, with a soft inner glow and a gentle
+two-sine ripple), a thin bright meniscus, a faint fresnel rim on the glass above, and the two rings. The edge is antialiased in
+screen space, so it is one clean line. A radial-gradient disc gives a soft contact shadow.
+
+Limits and performance:
+
+- These are stylised mannequins: faceless, with no individual fingers or toes, and the hands are a relaxed palm, a curled finger
+  mass and a separate thumb. Finer detail needs a hand-made model (see above).
+- Only **one WebGL canvas** is on a page at a time (the dashboard, or the onboarding stage). three.js and the decoder load lazily
+  (only when a figure is shown), so the login page does not download them, and only the figure that is needed is fetched. Without
+  WebGL, or if a figure fails to load, a flat card with the value, a band badge and a level meter is shown.
+- Rendering pauses when the tab is hidden or the canvas is off screen, the pixel ratio is clamped to 1 to 2, and under reduced
+  motion there is no sway or ripple and frames are drawn on demand.
+- The meshopt decoder runs WebAssembly, so the CSP allows `'wasm-unsafe-eval'` (WebAssembly compilation only, not JavaScript
+  `eval`).
 
 ### Media
 
@@ -645,3 +697,12 @@ script writes WebM, MP4 (no audio) and a WebP poster per clip to `client/src/ass
   not part of the app (the client only imports its CSS file at build time). The only fix npm offers is a breaking downgrade of
   `node-pg-migrate`, so I left it. `node-pg-migrate` is also a runtime dependency of the Docker image, so it is worth updating
   once a release with fixed dependencies exists.
+
+## Credits
+
+- The body figures are generated by this project's code (see "How the figures are made"); no third-party models are used.
+- [three.js](https://threejs.org) (MIT), including `GLTFLoader`, `RoomEnvironment` and the meshopt decoder from its examples, and
+  [React Three Fiber](https://r3f.docs.pmnd.rs) (MIT) render the figure.
+- [glTF Transform](https://gltf-transform.dev) (MIT) and [meshoptimizer](https://github.com/zeux/meshoptimizer) (MIT) bake and
+  compress the figures.
+- Landmark proportions are approximate values after Drillis and Contini (1966), _Body Segment Parameters_.
