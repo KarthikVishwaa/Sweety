@@ -7,14 +7,13 @@ interface UserMenuProps {
   name: string;
   onProfile: () => void;
   onLogout: () => void;
-  loggingOut: boolean;
 }
 
 const ITEM =
   'flex cursor-default items-center gap-2 rounded-md px-2 py-1.5 outline-none select-none data-[disabled]:opacity-50 data-[highlighted]:bg-muted [&_svg]:size-4';
 
 // The account menu in the header: the profile (where the figure can be changed) and logging out.
-export function UserMenu({ name, onProfile, onLogout, loggingOut }: UserMenuProps) {
+export function UserMenu({ name, onProfile, onLogout }: UserMenuProps) {
   const firstName = name.trim().split(/\s+/)[0] ?? name;
 
   return (
@@ -31,7 +30,7 @@ export function UserMenu({ name, onProfile, onLogout, loggingOut }: UserMenuProp
               <UserRound aria-hidden="true" />
               Profile
             </Menu.Item>
-            <Menu.Item className={ITEM} onClick={onLogout} disabled={loggingOut}>
+            <Menu.Item className={ITEM} onClick={onLogout}>
               <LogOut aria-hidden="true" />
               Log out
             </Menu.Item>
