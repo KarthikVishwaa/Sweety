@@ -48,6 +48,7 @@ images.
 - [x] Daily, month-to-date and previous-month reports: highest, lowest, average (one decimal) and count
 - [x] Dashboard with a date picker, previous/next day, and a "n of 4 readings" progress indicator
 - [x] Low / In range / High badges as display hints (shown as text as well as colour)
+- [x] A profile page with month insights: averages, time in range, meal-slot averages, a comparison with last month, consistency, highlights, a daily chart and a 3D figure filled to the month's average
 
 **Bonus tasks completed**
 
@@ -284,19 +285,20 @@ Every error has the same shape: `{ "error": { "message": "...", "code": "...", "
 `INVALID_CREDENTIALS`, `UNAUTHENTICATED`, `SLOT_TAKEN`, `DAILY_LIMIT_REACHED`, `READING_NOT_FOUND`, `NOT_FOUND`,
 `RATE_LIMITED`, `PAYLOAD_TOO_LARGE`, `INVALID_JSON` and `INTERNAL_ERROR`.
 
-| Method | Path                 | Auth | Purpose                                        |
-| ------ | -------------------- | ---- | ---------------------------------------------- |
-| GET    | `/api/health`        | no   | API and database status                        |
-| POST   | `/api/auth/register` | no   | Create an account and log in                   |
-| POST   | `/api/auth/login`    | no   | Log in                                         |
-| POST   | `/api/auth/logout`   | no   | Clear the cookie                               |
-| GET    | `/api/auth/me`       | yes  | The current user                               |
-| PATCH  | `/api/users/me`      | yes  | Change your gender (`male`, `female`, `other`) |
-| GET    | `/api/readings`      | yes  | List readings (paginated, optional date)       |
-| POST   | `/api/readings`      | yes  | Create a reading                               |
-| PUT    | `/api/readings/:id`  | yes  | Replace a reading                              |
-| DELETE | `/api/readings/:id`  | yes  | Delete a reading                               |
-| GET    | `/api/reports`       | yes  | Daily, month-to-date or previous-month report  |
+| Method | Path                 | Auth | Purpose                                       |
+| ------ | -------------------- | ---- | --------------------------------------------- |
+| GET    | `/api/health`        | no   | API and database status                       |
+| POST   | `/api/auth/register` | no   | Create an account and log in                  |
+| POST   | `/api/auth/login`    | no   | Log in                                        |
+| POST   | `/api/auth/logout`   | no   | Clear the cookie                              |
+| GET    | `/api/auth/me`       | yes  | The current user                              |
+| PATCH  | `/api/users/me`      | yes  | Change your name, gender or date of birth     |
+| GET    | `/api/readings`      | yes  | List readings (paginated, optional date)      |
+| POST   | `/api/readings`      | yes  | Create a reading                              |
+| PUT    | `/api/readings/:id`  | yes  | Replace a reading                             |
+| DELETE | `/api/readings/:id`  | yes  | Delete a reading                              |
+| GET    | `/api/reports`       | yes  | Daily, month-to-date or previous-month report |
+| GET    | `/api/insights`      | yes  | The profile page's figures for one month      |
 
 ### Health
 
@@ -307,7 +309,10 @@ unreachable.
 
 `POST /api/auth/register` with `{ "name", "email", "password", "dateOfBirth", "gender" }` returns `201`, sets the cookie and returns the user. The
 password hash is never returned. `gender` is `"male"`, `"female"` or `"other"` and is required for new sign-ups (it is `null` for older accounts) ("Please choose a gender."); the user object
-returned by register, login and `/me` includes it. `PATCH /api/users/me` with `{ "gender" }` returns `200 { user }` and only ever changes the caller's own row.
+returned by register, login and `/me` includes it. `PATCH /api/users/me` takes any of `{ "name", "gender", "dateOfBirth" }` (at least one: "Please change at least one field."), with the
+same rules and messages as sign-up (name 2 to 60 characters once trimmed, a real date of birth that is not in the future and not more
+than 120 years ago). It returns `200 { user }`, only ever changes the caller's own row, and leaves fields that are not sent alone. Email
+and password are not changed here. Every user object has `createdAt` (an ISO timestamp).
 
 ```json
 {
@@ -443,6 +448,70 @@ on 1, 10, 14 and 15 October:
 `daily` returns `readings: [{ id, slot, slotLabel, value, date }]` in slot order instead of `days`. `highest`, `lowest` and
 `average` are `null` when `count` is `0`. Errors are `400` with the messages in the next section.
 
+### Insights
+
+`GET /api/insights?month=YYYY-MM` returns everything the profile page shows for one month. Without `month` it is the current month
+in Asia/Kolkata. `400 "Please choose a valid month."` for anything that is not `YYYY-MM`, and `400 "Month cannot be in the
+future."`. For the current month the range ends today. Example for a month with 100 and 150 on day 1, 200 on day 2 and 65 on day 4
+(shortened):
+
+```json
+{
+  "month": "2026-11",
+  "range": { "from": "2026-11-01", "to": "2026-11-22" },
+  "count": 4,
+  "average": 128.8,
+  "highest": 200,
+  "lowest": 65,
+  "bands": {
+    "counts": { "low": 1, "inRange": 2, "high": 1 },
+    "percentages": { "low": 25, "inRange": 50, "high": 25 }
+  },
+  "bySlot": [
+    { "slot": "morning_fasting", "slotLabel": "Morning (fasting)", "average": 121.7, "count": 3 }
+  ],
+  "highestSlot": "after_breakfast",
+  "days": [{ "date": "2026-11-01", "average": 125, "lowest": 100, "highest": 150, "count": 2 }],
+  "consistency": {
+    "daysLogged": 3,
+    "daysInPeriod": 22,
+    "currentStreak": 0,
+    "longestStreak": 2,
+    "completionPercent": 5
+  },
+  "highlights": {
+    "highest": {
+      "value": 200,
+      "date": "2026-11-02",
+      "slot": "morning_fasting",
+      "slotLabel": "Morning (fasting)"
+    },
+    "lowest": {
+      "value": 65,
+      "date": "2026-11-04",
+      "slot": "morning_fasting",
+      "slotLabel": "Morning (fasting)"
+    }
+  },
+  "comparison": {
+    "previousAverage": 125,
+    "previousInRangePercent": 100,
+    "averageChange": 3.8,
+    "inRangeChange": -50
+  },
+  "recent": [
+    {
+      "id": "...",
+      "date": "2026-11-04",
+      "slot": "morning_fasting",
+      "slotLabel": "Morning (fasting)",
+      "value": 65
+    }
+  ],
+  "lifetime": { "totalReadings": 6, "firstReadingDate": "2026-10-10" }
+}
+```
+
 ## Validation rules
 
 Errors are returned as `400` (bad input) or `409` (conflict). For readings and reports only the **first** failing rule is
@@ -505,6 +574,33 @@ is over all readings in the range, not an average of daily averages.
 With no readings in the range the API still returns `200` with `count: 0` and `null` statistics, and the dashboard shows a
 "No readings in this period yet" message instead of the stat cards.
 
+## Insight definitions
+
+All figures are for the logged-in user and the chosen month; they are computed from a handful of aggregate queries, and the streak,
+rounding and comparison rules are pure functions with their own unit tests.
+
+- **Average, highest, lowest**: as for reports. The average is rounded to one decimal in PostgreSQL (128.75 becomes 128.8). With no
+  readings they are `null`, never `0` or `NaN`.
+- **Bands**: below 70 is low, 70 to 180 (both included) is in range, above 180 is high. The two thresholds are one constant on the
+  server (and `GLUCOSE_THRESHOLDS` on the client). Percentages are whole numbers worked out with the largest remainder method, so
+  they always add up to 100 (three equal readings give 34, 33, 33), and are all `0` for an empty month.
+- **By slot**: the average and count for each of the four slots (`null` and `0` when a slot has no readings). `highestSlot` is the
+  slot with the highest average; the earlier slot of the day wins a tie.
+- **Days**: one entry for each day that has readings, which feeds the daily chart.
+- **Days in the period**: the days that have passed in the month so far, counting today, or the whole month for a past month.
+- **Completion**: `readings / (days in the period x 4)`, rounded to a whole number. 4 readings in 22 days is 4 / 88, which is 5.
+- **Current streak**: the run of consecutive days with at least one reading that ends on the last day of the period (today, for the
+  current month), or on the day before it when that day has no reading yet, so today does not break a streak that is still
+  alive. It is `0` when neither of those days has a reading. For a past month the last day of the period is the last day of that
+  month. Streaks are counted inside the chosen month only.
+- **Longest streak**: the longest run of consecutive days with a reading in the month.
+- **Highlights**: the highest and lowest reading with their date and slot; a tie goes to the earlier date, then the earlier slot.
+- **Comparison**: this month against the whole previous calendar month, whatever day it is today. `previousAverage` and
+  `previousInRangePercent` are `null` when last month has no readings; `averageChange` (mg/dl, one decimal) and `inRangeChange`
+  (percentage points between the two whole-number shares) are `null` when either month has none.
+- **Recent**: the last five readings overall, newest first, from any month.
+- **Lifetime**: the total number of readings and the date of the first one.
+
 ## Security notes
 
 - **Passwords** are hashed with bcrypt at cost 12 and the hash is never returned. Login compares against a dummy hash when the
@@ -566,6 +662,27 @@ step 2. Back keeps everything typed; the form state lives only in memory and the
 loving mascot. Every screen has a staggered entrance, a direction-aware step slide and an animated progress bar, all using only
 transform and opacity; with `prefers-reduced-motion` they become short fades.
 
+### The profile page
+
+`/profile` (reached from **Profile** in the header menu; there is no longer a profile dialog) shows, on a wide screen, the 3D figure
+on the left, pinned while you scroll, and on the right the personal card, a month picker and the month's insights. On a phone it is
+one column with a compact figure first.
+
+- **Figure**: the account's gender, filled to the chosen month's average, with a caption such as "Average this month: 128.8 mg/dl, In
+  range" or "No readings this month" and the empty figure. It is the only 3D canvas on the page.
+- **Personal card**: initials, name, email (read-only), age with the date of birth ("36 years (born Tue, 15 May 1990)"), gender,
+  member since, total readings and tracking since. **Edit profile** opens a dialog for name, gender (the same gender cards as
+  sign-up) and date of birth, with the live age text and the same validation messages. Only what changed is sent; the page shows it
+  at once and puts it back with a message if the server refuses it.
+- **Month picker**: previous and next arrows (next is disabled on the current month); the month is in the URL as `?month=YYYY-MM`,
+  and a value that is not a month or is in the future means the current month.
+- **Insights**: four summary tiles, time in range as a stacked bar with the same numbers as text, average by meal slot (a bar chart
+  with lines at 70 and 180, the highest slot named in text), the comparison with last month in plain words with arrows (never
+  "better" or "worse"), consistency, highlights, the daily average chart, recent readings, and up to three short lines that only
+  restate the numbers. Every chart has a visually hidden table with the same data, and a "Not medical advice" note ends the page.
+- **States**: a skeleton while loading, a friendly empty state with a link to the dashboard for a month without readings, and an error
+  with a retry. Blocks enter with the shared stagger and become short fades with reduced motion.
+
 ### Gender and the glucose body
 
 The dashboard shows a 3D figure that fills with a colour like a glass of liquid: empty at 40 mg/dl, full (top of the head) at 400
@@ -578,7 +695,7 @@ morning), and the meaning is always given as text under it ("After lunch, 182 mg
 - Sign-up asks for it on its own screen after the date of birth (Male, Female or Other, no default, "Create my account" stays
   disabled until one is chosen). The stage starts as an empty, neutral glass figure; choosing a card cross-fades to that figure,
   which fills once to an in-range demo value.
-- From then on the figure everywhere follows the account. It is changed in **Profile** (the user menu in the header), with an
+- From then on the figure everywhere follows the account. It is changed in **Edit profile** on the profile page, with an
   optimistic update that is rolled back with a message if saving fails. There is no switch on the dashboard.
 - The column is nullable with no default. Accounts made before gender existed are `null`: they see the neutral figure and a
   dismissible, one-time "Choose a figure" dialog, which never returns once a gender is saved (a dismissed one may return after a
@@ -694,6 +811,16 @@ script writes WebM, MP4 (no audio) and a WebP poster per clip to `client/src/ass
 - Presets (durations, easings, stagger) are shared in `client/src/lib/motion.ts`.
 - Interactive controls have visible focus rings, tabs, dialogs and selects use Base UI's ARIA roles, the pagination `nav` is
   labelled "Pagination" and marks the current page with `aria-current`.
+
+### Not included on purpose
+
+The profile page only describes the readings a person logged. It deliberately has none of the following:
+
+- **No A1C or estimated A1C**, and no other estimate of a lab value from home readings.
+- **No medical profile fields**: no diabetes type, medication, diagnosis, height, weight, allergies or similar. The only personal
+  data is name, email, date of birth and gender, and gender is only used to choose the figure.
+- **No advice or judgement**: the observation lines and the comparison only state the numbers, and say nothing about whether a
+  change is good or bad.
 
 ### What I would improve with more time
 
