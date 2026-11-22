@@ -42,16 +42,16 @@ export function PersonalCard({ user, lifetime, onEdit }: PersonalCardProps) {
   return (
     <Card role="region" aria-label="Personal details">
       <CardContent className="space-y-4">
-        <div className="flex items-center gap-4">
+        <div className="flex flex-wrap items-center gap-x-4 gap-y-3">
           <div
             aria-hidden="true"
             className="flex size-14 shrink-0 items-center justify-center rounded-full bg-teal-100 text-lg font-semibold text-teal-900"
           >
             {initials(user.name)}
           </div>
-          <div className="min-w-0 flex-1">
-            <h2 className="truncate text-xl font-semibold">{user.name}</h2>
-            <p className="truncate text-sm text-muted-foreground">{user.email}</p>
+          <div className="min-w-40 flex-1">
+            <h2 className="text-xl font-semibold break-words">{user.name}</h2>
+            <p className="text-sm break-all text-muted-foreground">{user.email}</p>
           </div>
           <Button variant="outline" onClick={onEdit}>
             <Pencil aria-hidden="true" />
